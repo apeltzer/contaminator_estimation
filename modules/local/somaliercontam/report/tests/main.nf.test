@@ -138,8 +138,8 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = [ [ id:'test' ], file("${projectDir}/tests/data/somalier/samples.tsv", checkIfExists: true), file("${projectDir}/tests/data/somalier/samples.tsv"), file("${projectDir}/tests/data/somalier/samples.tsv") ]
-                input[1] = [ [ id:'attribution' ], [ file("${projectDir}/tests/data/somalier/samples.tsv") ], [ file("${projectDir}/tests/data/somalier/samples.tsv") ] ]
+                input[0] = [ [ id:'test' ], file("${projectDir}/tests/data/somalier/samples.tsv", checkIfExists: true), file("${projectDir}/tests/data/somalier/P1_N.somalier", checkIfExists: true), file("${projectDir}/tests/data/somalier/P1_T.somalier", checkIfExists: true) ]
+                input[1] = [ [ id:'attribution' ], [ file("${projectDir}/tests/data/somalier/P2_A.somalier", checkIfExists: true) ], [ file("${projectDir}/tests/data/somalier/P3_A.somalier", checkIfExists: true) ] ]
                 input[2] = [ [ id:'relate' ], [], [] ]
                 input[3] = [ [ id:'contamination' ], [] ]
                 """
