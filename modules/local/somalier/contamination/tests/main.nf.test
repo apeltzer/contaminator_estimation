@@ -1,0 +1,72 @@
+nextflow_process {
+
+    name "Test Process SOMALIER_CONTAMINATION"
+    script "../main.nf"
+    process "SOMALIER_CONTAMINATION"
+
+    tag "modules"
+    tag "modules_local"
+    tag "somalier"
+    tag "somalier/contamination"
+
+    test("homo_sapiens synthetic - somalier x6, sites") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/somalier/P1_N.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P1_T.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P2_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P3_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P4_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P6_A.somalier", checkIfExists: true),
+                    ]
+                ]
+                input[1] = [ [ id:'sites' ], file("${projectDir}/tests/data/somalier/sites.panel.vcf", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert path(process.out.pairs_tsv[0][1]).readLines().size() == 31 }
+            )
+        }
+    }
+
+    test("homo_sapiens synthetic - somalier x6, sites - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'test' ],
+                    [
+                        file("${projectDir}/tests/data/somalier/P1_N.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P1_T.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P2_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P3_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P4_A.somalier", checkIfExists: true),
+                        file("${projectDir}/tests/data/somalier/P6_A.somalier", checkIfExists: true),
+                    ]
+                ]
+                input[1] = [ [ id:'sites' ], file("${projectDir}/tests/data/somalier/sites.panel.vcf", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+}
