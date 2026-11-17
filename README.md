@@ -113,7 +113,6 @@ nf-core/contaminationqc was originally written by Alexander Peltzer.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
-
 ## Contributions and Support
 
 If you would like to contribute to this pipeline, please see the [contributing guidelines](docs/CONTRIBUTING.md).
