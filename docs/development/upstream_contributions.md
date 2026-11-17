@@ -1,6 +1,10 @@
-# Upstream contributions (drafts, not yet opened)
+# Upstream contributions
 
 Changes made locally in this pipeline that should move upstream so the pipeline only uses unpatched nf-core modules and released tools.
+
+nf-core/modules items 1 and 2+3 are prepared as tested branches (based on nf-core/modules `master`):
+`somalier-contamination` and `somalier-relate-sites-extract-prefix` (2 and 3 combined because both change the
+`vcf_extract_relate_somalier` snapshots). They still need to be pushed to a fork and opened as PRs.
 
 | #   | Target          | Change                                                     | Status in this repo                                                                  |
 | --- | --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -37,6 +41,8 @@ Diff: `modules/nf-core/somalier/relate/somalier-relate.diff`.
 **Title:** `somalier/extract: name output after task.ext.prefix`
 
 `somalier extract` names its output after the BAM's `SM` tag, while the module's stub uses `${prefix}.somalier`. Vendor pipelines often write identical `SM` tags (e.g. `SAMPLE`), which leads to input file name collisions in any downstream process that stages several `.somalier` files (`somalier relate`). The script now renames the single output to `${prefix}.somalier` (default `meta.id`), matching the stub. The sample name stored inside the file is unchanged (use `--sample-prefix` via `ext.args` to make it unique).
+
+Only a single output is renamed: for multi-sample VCFs `somalier extract` writes one file per sample, which are kept as they are.
 
 Diff: `modules/nf-core/somalier/extract/somalier-extract.diff`.
 

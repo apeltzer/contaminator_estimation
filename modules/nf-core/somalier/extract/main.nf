@@ -33,8 +33,9 @@ process SOMALIER_EXTRACT {
         ${input} \\
         ${args}
 
-    # name the output after the prefix (as in the stub) instead of the SM tag to avoid collisions
-    if [ ! -f "${prefix}.somalier" ]; then
+    # single-sample input: name the output after the prefix (as in the stub) instead of the SM tag,
+    # so identical SM tags cannot collide downstream; multi-sample VCFs keep one file per sample
+    if [ ! -f "${prefix}.somalier" ] && [ \$(ls *.somalier | wc -l) -eq 1 ]; then
         mv *.somalier "${prefix}.somalier"
     fi
     """
