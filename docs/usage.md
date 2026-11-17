@@ -41,6 +41,18 @@ PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
+To create a samplesheet from S3 prefixes or local directories, use the helper script shipped with the pipeline (needs the AWS CLI for `s3://`; each location is listed once, indexes are matched from the listing, files without index are skipped):
+
+```bash
+bin/bam_dir_to_samplesheet.py s3://bucket/runs/run42/ s3://bucket/runs/run43/ \
+    --batch-regex 'runs/([^/]+)/' \
+    --individual-regex '^(P[0-9]+)_' \
+    --exclude 'Logs_Intermediates' \
+    -o samplesheet.csv
+```
+
+`--batch-level 1` uses the BAM's parent folder as batch, `--prefix-parent` makes duplicated file names unique, `--profile`/`--region`/`--no-sign-request` are passed to the AWS CLI. See `bin/bam_dir_to_samplesheet.py --help`.
+
 The `SM` tag of the BAM read group is not used as the sample name: somalier stores `<sample>__<SM>` internally so that duplicated `SM` tags (common with vendor pipelines) cannot collide.
 
 ### Background samples
