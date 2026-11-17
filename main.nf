@@ -26,9 +26,6 @@ include { getGenomeAttribute      } from './subworkflows/local/utils_nfcore_cont
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// TODO nf-core: Remove this line if you don't need a FASTA file
-//   This is an example of how to use getGenomeAttribute() to fetch parameters
-//   from igenomes.config using `--genome`
 params.fasta = getGenomeAttribute('fasta')
 
 /*
@@ -44,6 +41,7 @@ workflow NFCORE_CONTAMINATIONQC {
 
     take:
     samplesheet // channel: samplesheet read in from --input
+    background  // channel: background .somalier files read in from --somalier_background
 
     main:
 
@@ -52,6 +50,7 @@ workflow NFCORE_CONTAMINATIONQC {
     //
     CONTAMINATIONQC (
         samplesheet,
+        background,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -88,7 +87,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NFCORE_CONTAMINATIONQC (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.background
     )
     //
     // SUBWORKFLOW: Run completion tasks

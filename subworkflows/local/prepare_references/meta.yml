@@ -1,0 +1,73 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: prepare_references
+description: 'Prepare global references: FASTA index, sites contig check and optional panel restriction, Kraken2/Bracken database
+  unpacking'
+keywords:
+- references
+- somalier
+- sites
+- kraken2
+components:
+- samtools/faidx
+- untar
+- somaliercontam/restrictsites
+input:
+- fasta:
+    type: string
+    description: Path to reference FASTA
+- fasta_fai:
+    type: string
+    description: Path to FASTA index (optional)
+- sites:
+    type: string
+    description: Path to somalier sites VCF with INFO/AF
+- panel_bed:
+    type: string
+    description: Panel target BED (optional)
+- kraken2_db:
+    type: string
+    description: Kraken2 database directory or .tar.gz (optional)
+- bracken_db:
+    type: string
+    description: Bracken database directory or .tar.gz (optional)
+output:
+- fasta:
+    description: Reference FASTA
+    structure:
+    - - &id001
+        meta:
+          type: map
+          description: Groovy Map containing sample information
+      - fasta:
+          type: file
+          description: FASTA
+- fai:
+    description: FASTA index
+    structure:
+    - - *id001
+      - fai:
+          type: file
+          description: FAI
+- sites:
+    description: (Panel-restricted) sites VCF
+    structure:
+    - - *id001
+      - vcf:
+          type: file
+          description: sites VCF
+- kraken2_db:
+    description: Kraken2 database
+    structure:
+    - - db:
+          type: directory
+          description: database directory
+- bracken_db:
+    description: Bracken database
+    structure:
+    - - db:
+          type: directory
+          description: database directory
+authors:
+- '@apeltzer'
+maintainers:
+- '@apeltzer'

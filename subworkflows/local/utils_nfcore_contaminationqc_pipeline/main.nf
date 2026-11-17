@@ -110,26 +110,51 @@ workflow PIPELINE_INITIALISATION {
 
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
-        }
-        .groupTuple()
-        .map { samplesheet ->
-            validateInputSamplesheet(samplesheet)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
+        .map { meta, bam, bai ->
+            [ meta + [ individual: meta.individual ?: '', batch: meta.batch ?: '' ], bam, bai ]
         }
         .set { ch_samplesheet }
 
+    //
+    // Optional background .somalier files (candidate sources / identity references only)
+    //
+    def ch_background = params.somalier_background
+        ? channel
+            .fromList(samplesheetToList(params.somalier_background, "${projectDir}/assets/schema_background.json"))
+            .map { meta, somalier -> [ meta + [ individual: meta.individual ?: '', role: 'background' ], somalier ] }
+        : channel.empty()
+
+    //
+    // Background IDs must not clash with cohort IDs
+    //
+    ch_samplesheet
+        .map { meta, _bam, _bai -> meta.id }
+        .mix(ch_background.map { meta, _somalier -> meta.id })
+        .toList()
+        .map { ids ->
+            def dups = ids.countBy { id -> id }.findAll { _id, n -> n > 1 }.keySet()
+            if (dups) {
+                error("Sample IDs must be unique across --input and --somalier_background. Duplicated: ${dups.join(', ')}")
+            }
+        }
+
+    //
+    // Background .somalier file names must not clash with each other or with cohort outputs (<sample>.somalier)
+    //
+    ch_samplesheet
+        .map { meta, _bam, _bai -> "${meta.id}.somalier".toString() }
+        .mix(ch_background.map { _meta, somalier -> somalier.name })
+        .toList()
+        .map { names ->
+            def dups = names.countBy { name -> name }.findAll { _name, n -> n > 1 }.keySet()
+            if (dups) {
+                error("File name clash between --somalier_background files and/or cohort sample IDs: ${dups.join(', ')}. Rename the background .somalier files.")
+            }
+        }
+
     emit:
-    samplesheet = ch_samplesheet
+    samplesheet = ch_samplesheet // channel: [ val(meta), path(bam), path(bai) ]
+    background  = ch_background  // channel: [ val(meta), path(somalier) ]
     versions    = ch_versions
 }
 
@@ -188,22 +213,40 @@ workflow PIPELINE_COMPLETION {
 //
 def validateInputParameters() {
     genomeExistsError()
-}
-
-//
-// Validate channels from input samplesheet
-//
-def validateInputSamplesheet(input) {
-    def (metas, fastqs) = input[1..2]
-
-    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
-    def endedness_ok = metas.collect{ meta -> meta.single_end }.unique().size == 1
-    if (!endedness_ok) {
-        error("Please check input samplesheet -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${metas[0].id}")
+    if (!params.fasta) {
+        error("Please provide a reference FASTA with --fasta (or a valid --genome)")
     }
-
-    return [ metas[0], fastqs ]
+    if (params.run_kraken2 && !params.kraken2_db) {
+        error("--run_kraken2 requires --kraken2_db (a Kraken2 database directory or .tar.gz)")
+    }
+    if (params.run_bracken && !params.run_kraken2) {
+        error("--run_bracken requires --run_kraken2")
+    }
 }
+
+//
+// Contig names of the sites VCF must overlap the FASTA index (hg19 'chr1' vs GRCh37 '1' trap).
+// Runs on the head node on two small text files.
+//
+def checkSitesContigs(sites, fai) {
+    def fai_contigs = fai.readLines().collect { line -> line.tokenize('\t')[0] } as Set
+    def site_contigs = [] as Set
+    def reader = sites.name.endsWith('.gz')
+        ? new BufferedReader(new InputStreamReader(new java.util.zip.GZIPInputStream(sites.newInputStream())))
+        : sites.newReader()
+    reader.withCloseable { r ->
+        r.eachLine { line ->
+            if (!line.startsWith('#')) {
+                site_contigs << line.tokenize('\t')[0]
+            }
+        }
+    }
+    if (!site_contigs.intersect(fai_contigs)) {
+        error("No shared contig names between --sites (${site_contigs.take(5).join(', ')}, ...) and --fasta (${fai_contigs.take(5).join(', ')}, ...). Wrong sites build or contig naming (chr1 vs 1)?")
+    }
+    return true
+}
+
 //
 // Get attribute from genome config file e.g. fasta
 //
@@ -233,12 +276,12 @@ def genomeExistsError() {
 // Generate methods description for MultiQC
 //
 def toolCitationText() {
-    // TODO nf-core: Optionally add in-text citation tools to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "Tool (Foo et al. 2023)" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def citation_text = [
             "Tools used in the workflow included:",
-            "MultiQC (Ewels et al. 2016)",
+            "somalier (Pedersen et al. 2020),",
+            params.run_kraken2 ? "SAMtools (Danecek et al. 2021), Kraken2 (Wood et al. 2019)," : "",
+            params.run_bracken ? "Bracken (Lu et al. 2017)," : "",
+            "and MultiQC (Ewels et al. 2016)",
             "."
         ].join(' ').trim()
 
@@ -246,10 +289,11 @@ def toolCitationText() {
 }
 
 def toolBibliographyText() {
-    // TODO nf-core: Optionally add bibliographic entries to this list.
-    // Can use ternary operators to dynamically construct based conditions, e.g. params["run_xyz"] ? "<li>Author (2023) Pub name, Journal, DOI</li>" : "",
-    // Uncomment function in methodsDescriptionText to render in MultiQC report
     def reference_text = [
+            "<li>Pedersen, B. S., Bhetariya, P. J., Brown, J., Kravitz, S. N., Marth, G., Jensen, R. L., Bronner, M. P., Underhill, H. R., & Quinlan, A. R. (2020). Somalier: rapid relatedness estimation for cancer and germline studies using efficient genome sketches. Genome Medicine, 12(1), 62. doi: 10.1186/s13073-020-00761-2</li>",
+            params.run_kraken2 ? "<li>Danecek, P., Bonfield, J. K., Liddle, J., Marshall, J., Ohan, V., Pollard, M. O., Whitwham, A., Keane, T., McCarthy, S. A., Davies, R. M., & Li, H. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>" : "",
+            params.run_kraken2 ? "<li>Wood, D. E., Lu, J., & Langmead, B. (2019). Improved metagenomic analysis with Kraken 2. Genome Biology, 20(1), 257. doi: 10.1186/s13059-019-1891-0</li>" : "",
+            params.run_bracken ? "<li>Lu, J., Breitwieser, F. P., Thielen, P., & Salzberg, S. L. (2017). Bracken: estimating species abundance in metagenomics data. PeerJ Computer Science, 3, e104. doi: 10.7717/peerj-cs.104</li>" : "",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"
         ].join(' ').trim()
 
@@ -280,9 +324,8 @@ def methodsDescriptionText(mqc_methods_yaml) {
     meta["tool_citations"] = ""
     meta["tool_bibliography"] = ""
 
-    // TODO nf-core: Only uncomment below if logic in toolCitationText/toolBibliographyText has been filled!
-    // meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
-    // meta["tool_bibliography"] = toolBibliographyText()
+    meta["tool_citations"] = toolCitationText().replaceAll(", \\.", ".").replaceAll("\\. \\.", ".").replaceAll(", \\.", ".")
+    meta["tool_bibliography"] = toolBibliographyText()
 
 
     def methods_text = mqc_methods_yaml.text
