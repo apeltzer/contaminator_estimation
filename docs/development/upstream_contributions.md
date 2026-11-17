@@ -2,9 +2,7 @@
 
 Changes made locally in this pipeline that should move upstream so the pipeline only uses unpatched nf-core modules and released tools.
 
-nf-core/modules items 1 and 2+3 are prepared as tested branches (based on nf-core/modules `master`):
-`somalier-contamination` and `somalier-relate-sites-extract-prefix` (2 and 3 combined because both change the
-`vcf_extract_relate_somalier` snapshots). They still need to be pushed to a fork and opened as PRs.
+nf-core/modules PRs (opened 2026-11-17): item 1 → [nf-core/modules#13815](https://github.com/nf-core/modules/pull/13815), items 2+3 (combined, both change the `vcf_extract_relate_somalier` snapshots) → [nf-core/modules#13816](https://github.com/nf-core/modules/pull/13816). Once merged, run `nf-core modules install somalier/contamination` / `nf-core modules update somalier/extract somalier/relate` and drop the local module and patches.
 
 | #   | Target          | Change                                                     | Status in this repo                                                                  |
 | --- | --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
