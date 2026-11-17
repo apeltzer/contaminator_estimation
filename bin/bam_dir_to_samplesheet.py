@@ -13,7 +13,7 @@ Examples
 
   # several runs, batch from a path component, patient ID from the sample name, skip intermediates
   bam_dir_to_samplesheet.py s3://bucket/runs/run42/ s3://bucket/runs/run43/ \\
-      --batch-regex 'runs/([^/]+)/' --individual-regex '^(P\\d+)_' --exclude '_tmp|Logs_Intermediates' \\
+      --batch-regex 'runs/([^/]+)/' --individual-regex '^(P\\d+)_' --exclude '_tmp' \\
       -o samplesheet.csv
 
 Options for S3 access (--profile, --no-sign-request, --region) are passed to the AWS CLI.
@@ -28,7 +28,7 @@ import re
 import subprocess
 import sys
 
-ALN = re.compile(r"\.(bam|cram)$")
+ALN = re.compile(r"\.(bam|cram)$", re.IGNORECASE)
 INDEX_SUFFIXES = {"bam": [".bam.bai", ".bai", ".bam.csi", ".csi"], "cram": [".cram.crai", ".crai"]}
 VALID = re.compile(r"[^A-Za-z0-9._-]")
 
@@ -80,6 +80,7 @@ def main():
     g.add_argument("--batch-regex", help="batch = first capture group on the full path")
     ap.add_argument("--prefix-parent", action="store_true",
                     help="make duplicated sample IDs unique by prefixing the parent folder name")
+    ap.add_argument("-v", "--verbose", action="store_true", help="log every skipped file and why")
     ap.add_argument("--profile", help="AWS CLI profile")
     ap.add_argument("--region", help="AWS region")
     ap.add_argument("--no-sign-request", action="store_true", help="anonymous S3 access (public buckets)")
@@ -97,18 +98,29 @@ def main():
     present = set(files)
 
     rows, skipped = [], 0
+    stats = collections.Counter()
+
+    def drop(reason, f):
+        stats[reason] += 1
+        if args.verbose:
+            log(f"skip ({reason}): {f}")
+
     for f in sorted(files):
         m = ALN.search(f)
         if not m:
             continue
+        stats["alignment files"] += 1
         if args.include and not re.search(args.include, f):
+            drop("not matching --include", f)
             continue
         if args.exclude and re.search(args.exclude, f):
+            drop("matching --exclude", f)
             continue
         stem = f[: m.start()]
-        idx = next((stem + s for s in INDEX_SUFFIXES[m.group(1)] if stem + s in present), None)
+        idx = next((stem + s for s in INDEX_SUFFIXES[m.group(1).lower()] if stem + s in present), None)
         if not idx:
             log(f"WARNING: no index for {f} - skipped")
+            drop("no index", f)
             skipped += 1
             continue
         parts = f.rstrip("/").split("/")
@@ -136,8 +148,13 @@ def main():
                  + (" ..." if len(dups) > 20 else ""))
     for r in rows:
         r["individual"] = VALID.sub("_", first_group(args.individual_regex, r["sample"], "individual"))
+    log("found {} BAM/CRAM files; skipped: {}".format(
+        stats["alignment files"],
+        ", ".join(f"{n} {r}" for r, n in stats.items() if r != "alignment files") or "none"))
     if not rows:
-        sys.exit("no BAM/CRAM files with index found")
+        exts = collections.Counter(os.path.splitext(f)[1].lower() or "(none)" for f in files).most_common(8)
+        sys.exit("no BAM/CRAM files with index found; most common extensions in the listing: "
+                 + ", ".join(f"{e} ({n})" for e, n in exts))
 
     out = open(args.output, "w", newline="") if args.output else sys.stdout
     w = csv.DictWriter(out, fieldnames=["sample", "bam", "bai", "individual", "batch"], extrasaction="ignore",

@@ -47,11 +47,10 @@ To create a samplesheet from S3 prefixes or local directories, use the helper sc
 bin/bam_dir_to_samplesheet.py s3://bucket/runs/run42/ s3://bucket/runs/run43/ \
     --batch-regex 'runs/([^/]+)/' \
     --individual-regex '^(P[0-9]+)_' \
-    --exclude 'Logs_Intermediates' \
     -o samplesheet.csv
 ```
 
-`--batch-level 1` uses the BAM's parent folder as batch, `--prefix-parent` makes duplicated file names unique, `--profile`/`--region`/`--no-sign-request` are passed to the AWS CLI. See `bin/bam_dir_to_samplesheet.py --help`.
+`--include`/`--exclude REGEX` filter on the full path (DRAGEN/TSO500 output folders often keep the final BAMs below `Logs_Intermediates/`, so check before excluding it), `-v` logs every skipped file and the reason, `--batch-level 1` uses the BAM's parent folder as batch, `--prefix-parent` makes duplicated file names unique, `--profile`/`--region`/`--no-sign-request` are passed to the AWS CLI. See `bin/bam_dir_to_samplesheet.py --help`.
 
 The `SM` tag of the BAM read group is not used as the sample name: somalier stores `<sample>__<SM>` internally so that duplicated `SM` tags (common with vendor pipelines) cannot collide.
 
