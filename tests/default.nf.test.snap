@@ -6,6 +6,9 @@
                     "kraken2": "2.1.6",
                     "pigz": 2.8
                 },
+                "SAMTOOLS_COVERAGE": {
+                    "samtools": 1.25
+                },
                 "SAMTOOLS_FAIDX": {
                     "samtools": 1.25
                 },
@@ -14,19 +17,19 @@
                 },
                 "SOMALIERCONTAM_ATTRIBUTE": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIERCONTAM_IDENTITY": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIERCONTAM_REPORT": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIERCONTAM_RESTRICTSITES": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIER_CONTAMINATION": {
                     "somalier": "0.3.6"
@@ -91,6 +94,14 @@
                 "pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml",
                 "references",
                 "references/sites.panel.vcf",
+                "samtools",
+                "samtools/coverage",
+                "samtools/coverage/P1_N.coverage.txt",
+                "samtools/coverage/P1_T.coverage.txt",
+                "samtools/coverage/P2_A.coverage.txt",
+                "samtools/coverage/P3_A.coverage.txt",
+                "samtools/coverage/P4_A.coverage.txt",
+                "samtools/coverage/P6_A.coverage.txt",
                 "somalier",
                 "somalier/contamination",
                 "somalier/contamination/geno1.contamination.pairs.tsv",
@@ -111,7 +122,7 @@
                 "contaminationqc.attribution.pairs.tsv.gz:md5,ca9d72b302dffb7c6e89782c4485855a",
                 "contaminationqc.longitudinal.pairs.tsv:md5,49eb4cf3298df1c8d8fe701f5b286d65",
                 "contaminationqc.relatedness_flags.tsv:md5,8ffb6de2b30ea3ba0465c59f6995f814",
-                "contaminationqc.summary.samples.tsv:md5,2b4299f57ee55879ea597ef9e6060662",
+                "contaminationqc.summary.samples.tsv:md5,c88e342ee9a3c138512417f69cfa3c43",
                 "identity.genotype_groups.tsv:md5,e900439bcd7a39c64dde747964a13a16",
                 "identity.identity_pairs.tsv:md5,a46461ebc12cc369b4415a38d58f3f7c",
                 "P1_N.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
@@ -129,26 +140,32 @@
                 "kraken-top-n-plot_Phylum.txt:md5,6ff2031fe6bdf01a2d37c00ad1a50d8c",
                 "kraken-top-n-plot_Species.txt:md5,b7e9714699f7d890b70bb7d4d0facabd",
                 "kraken-top-n-plot_Unclassified.txt:md5,9711e0bddd0eac63422f2f48d121520b",
-                "multiqc_contaminationqc_summary.txt:md5,94bc866c9e76d20509acc4782cf4dfdc",
+                "multiqc_contaminationqc_summary.txt:md5,e1c4521c475d784340a18a173bb14803",
                 "multiqc_general_stats.txt:md5,8814a55a48008a7c645c2ddee1cb0980",
                 "multiqc_kraken.txt:md5,54ea941601944d0bcfd97045bcf74c79",
-                "multiqc_somalier.txt:md5,4ea43e725c758ac65c49da08f163de78",
+                "multiqc_somalier.txt:md5,9a3d4f86a8218fa53283fdad6dd9b475",
                 "somalier_het_check_plot.txt:md5,45fc9ee1654cafb9177a3403681ac598",
-                "somalier_stats.txt:md5,926a0443eedd3bced3f04d87cadfcb42",
-                "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b",
+                "somalier_stats.txt:md5,ae0c8c117e0b4dcf3576c884671ba7bf",
+                "sites.panel.vcf:md5,ae524aeface83a629f3efe936f120627",
+                "P1_N.coverage.txt:md5,08eda3cb4635e3a46df8d3215b6a2970",
+                "P1_T.coverage.txt:md5,67beb8ef4cf6a5798d14100090231529",
+                "P2_A.coverage.txt:md5,8f243aef10f2426d5cfb2f0b89523891",
+                "P3_A.coverage.txt:md5,f3eaf6bd5cb12f5523f5fbfed8a64f1d",
+                "P4_A.coverage.txt:md5,33f817f4a17902c91d37ee1e298d7065",
+                "P6_A.coverage.txt:md5,797e9c2f19c92529e79cb8c273f90fe2",
                 "geno1.contamination.pairs.tsv:md5,fcde57b5135d1b8db25143b2255a9def",
                 "geno1.contamination.samples.tsv:md5,ae239a6d519a11378d48d4b6848a00a0",
-                "P1_N.somalier:md5,f4f590962e1fb9dec4f6bed7be183cac",
-                "P1_T.somalier:md5,c54c5fcf323b919448119d76336d97f4",
-                "P2_A.somalier:md5,0c8315fbf0fe4ab1bab4a023c101404e",
-                "P3_A.somalier:md5,d0f9e61e671f197537b6c77cc02b4702",
-                "P4_A.somalier:md5,0fcb254496dff9731309794250523ce8",
-                "P6_A.somalier:md5,cf1c7e4593bc86281494ae2dfe109622",
-                "cohort.relate.pairs.tsv:md5,2eb0cc38520b5508bcf17dfd810d4ecf",
-                "cohort.relate.samples.tsv:md5,95c95c03f480f064a43a5e875e8702c4"
+                "P1_N.somalier:md5,136ddaa1d83576771bd68e93303c0729",
+                "P1_T.somalier:md5,0398c7cc58e0802f3fdececa69d9b6a0",
+                "P2_A.somalier:md5,000ff8a7d6d8cf58ec8b964d973d2b8d",
+                "P3_A.somalier:md5,dd84f0f72f375047e289cb7c578d8e63",
+                "P4_A.somalier:md5,b9091ce5ee919cc9a18043fdf7461417",
+                "P6_A.somalier:md5,22828fcbd79c17dcc55cf211d5ade15c",
+                "cohort.relate.pairs.tsv:md5,628497cc562113c27daa5ccc849e2f99",
+                "cohort.relate.samples.tsv:md5,76dc433817f32de61befad0ea937e346"
             ]
         ],
-        "timestamp": "2026-11-17T23:32:13.310882",
+        "timestamp": "2026-11-18T12:34:39.603408",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"
@@ -162,15 +179,15 @@
                 },
                 "SOMALIERCONTAM_ATTRIBUTE": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIERCONTAM_IDENTITY": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIERCONTAM_REPORT": {
                     "python": "3.12.8",
-                    "somalier_contam": "1.0.0"
+                    "somalier_contam": "1.1.0"
                 },
                 "SOMALIER_CONTAMINATION": {
                     "somalier": "0.3.6"
@@ -244,26 +261,26 @@
                 "identity.identity_pairs.tsv:md5,24fc017d2c5dd8ccb1b12d15c32b4b2d",
                 "multiqc_contaminationqc_summary.txt:md5,50ff2ba947d089d14df96ac21e2e3e18",
                 "multiqc_general_stats.txt:md5,ec6d61cd925081fd6b432b5431414b88",
-                "multiqc_somalier.txt:md5,f41acc1aaf32ff5e6ed35227c066c3ad",
+                "multiqc_somalier.txt:md5,543122225c77b28d11a71f3e369228fa",
                 "somalier_het_check_plot.txt:md5,611cee36a5f929ab42fff803d10070db",
-                "somalier_stats.txt:md5,cbdf61b38fa80d2ff282326e306c5119",
+                "somalier_stats.txt:md5,197c7123f3fcbf688464f8f8a3bd34d2",
                 "RUN_A.contamination.pairs.tsv:md5,f7c3f480f737925ee4cb9defe2c61a4d",
                 "RUN_A.contamination.samples.tsv:md5,3bd40c6e1cc9e59f920e1077bb473675",
                 "RUN_B.contamination.pairs.tsv:md5,a48fa7419d1eed0bc34f086cdc9e2465",
                 "RUN_B.contamination.samples.tsv:md5,4bca46d5a107daa1a26d1958b58be03f",
-                "P1_N.somalier:md5,0b99948752e5f376248b404e2729d41e",
-                "P1_T.somalier:md5,5cfbfbd025d0c5995a3c6775fa7ede50",
-                "P2_A.somalier:md5,dccb1ee9db95a3a56846930d052c431f",
-                "P3_A.somalier:md5,3473f50f1af835a951ac4c0eeeeb98df",
-                "P4_A.somalier:md5,2b146adaf95de7e68477fff3c5e18d34",
-                "P6_A.somalier:md5,baa16c728c777089dbf7e93bc5e30df0",
-                "RUN_A.relate.pairs.tsv:md5,af0eabcb3ff0c58f3fb60fcf75d9e468",
-                "RUN_A.relate.samples.tsv:md5,64419b2bbe45adcbc238bcdfa0be541f",
-                "RUN_B.relate.pairs.tsv:md5,62ea7c3683f6ef1d83083963e2244b5f",
-                "RUN_B.relate.samples.tsv:md5,5c04918057e830003bba9cd31d6b82f4"
+                "P1_N.somalier:md5,5045d6d12b9ce29ebc214dd7ca22b376",
+                "P1_T.somalier:md5,3e29595cbf5e3cce97bcdb15df255a22",
+                "P2_A.somalier:md5,1b567e47af0b4c1f11fba1d320d0c5b9",
+                "P3_A.somalier:md5,a2a69164807a01564aeb8fc43650b375",
+                "P4_A.somalier:md5,c43bd8bd26b243c67fcf1116f9d37642",
+                "P6_A.somalier:md5,476d083cbb47387facc2de9f9f4b7c18",
+                "RUN_A.relate.pairs.tsv:md5,b908112319ab2b222da53011c7dd263e",
+                "RUN_A.relate.samples.tsv:md5,7f04aca32c976d1b972a7461ba4966bf",
+                "RUN_B.relate.pairs.tsv:md5,8ebf80a3d708d2c8ee2fdc579e0ea31c",
+                "RUN_B.relate.samples.tsv:md5,ef765039643c1269591334bebaf05ded"
             ]
         ],
-        "timestamp": "2026-11-17T23:32:40.908251",
+        "timestamp": "2026-11-18T12:31:51.565025",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"

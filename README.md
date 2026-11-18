@@ -21,7 +21,12 @@
 
 ## Introduction
 
-**nf-core/contaminationqc** is a bioinformatics pipeline that checks aligned human sequencing data (BAM/CRAM, e.g. targeted panels such as TSO500) for **sample contamination**, identifies **which sample in the cohort the contaminating DNA came from**, verifies **sample identity** (swaps, longitudinal same-patient samples) and optionally screens for **non-human contamination** with Kraken2. It scales to thousands of samples per run.
+**nf-core/contaminationqc** is a bioinformatics pipeline that checks aligned human sequencing data (BAM/CRAM, e.g. targeted panels such as TSO500) for **sample contamination**, identifies **which sample in the cohort the contaminating DNA came from**, verifies **sample identity** (swaps, longitudinal same-patient samples), compares **inferred with annotated sex** and optionally screens for **non-human contamination** with Kraken2. It scales to thousands of samples per run.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/contaminationqc_metro_map_dark.png">
+  <img alt="nf-core/contaminationqc metro map" src="docs/images/contaminationqc_metro_map_light.png">
+</picture>
 
 1. Prepare references: FASTA index ([`SAMtools`](https://www.htslib.org/)), restrict somalier sites to panel targets (optional)
 2. Extract allele counts at informative sites per sample ([`somalier extract`](https://github.com/brentp/somalier))
@@ -29,9 +34,60 @@
 4. Sample identity: hom-hom discordance and genotype (= individual) groups across all samples and batches (`somalier_contam.py identity`)
 5. Anchored contamination MLEs between samples of the same individual ([`somalier contamination`](https://github.com/brentp/somalier))
 6. Contamination **source attribution**: mixture model "candidate sample is the contaminant" vs "an unknown person is the contaminant", sharded over receivers (`somalier_contam.py attribute`)
-7. Per-sample calls (`clean`, `source_identified`, `source_ambiguous`, `contaminated_source_not_in_cohort`), longitudinal and relatedness flags (`somalier_contam.py report`)
-8. Optional: non-human screening of unmapped read pairs ([`SAMtools fastq`](https://www.htslib.org/), [`Kraken2`](https://ccb.jhu.edu/software/kraken2/), [`Bracken`](https://ccb.jhu.edu/software/bracken/))
-9. Present QC ([`MultiQC`](http://multiqc.info/))
+7. Sex check: chrY reads per million autosomal reads ([`SAMtools coverage`](https://www.htslib.org/), MAPQ-filtered) and X heterozygosity (somalier) vs. the samplesheet column `sex`
+8. Per-sample calls (`clean`, `source_identified`, `source_ambiguous`, `contaminated_source_not_in_cohort`), sex check, longitudinal and relatedness flags (`somalier_contam.py report`)
+9. Optional: non-human screening of unmapped read pairs ([`SAMtools fastq`](https://www.htslib.org/), [`Kraken2`](https://ccb.jhu.edu/software/kraken2/), [`Bracken`](https://ccb.jhu.edu/software/bracken/))
+10. Present QC ([`MultiQC`](http://multiqc.info/))
+
+<details markdown="1">
+<summary>Detailed workflow diagram</summary>
+
+```mermaid
+flowchart TB
+    subgraph refs["Reference preparation"]
+        fasta[/"FASTA"/] --> faidx["SAMtools faidx"]
+        sites[/"somalier sites VCF"/] --> restrict["Restrict sites to panel<br/>(--panel_bed)"]
+        k2db[/"Kraken2 / Bracken DB"/] --> untar["Untar (if .tar.gz)"]
+    end
+
+    samplesheet[/"Samplesheet<br/>sample, bam, bai, individual, batch, sex"/]
+    background[/"Background .somalier<br/>(--somalier_background)"/]
+
+    subgraph somalier["Contamination, source attribution & identity"]
+        extract["somalier extract<br/><i>per sample</i>"]
+        relate["somalier relate<br/><i>per batch</i>"]
+        identity["Identity groups<br/><i>global, all batches + background</i>"]
+        anchored["somalier contamination<br/><i>per genotype group</i>"]
+        attribute["Source attribution<br/><i>per batch x receiver shard</i>"]
+    end
+
+    subgraph sexcheck["Sex check (--skip_sex_check)"]
+        coverage["SAMtools coverage<br/><i>per sample, MAPQ >= 30</i>"]
+    end
+
+    subgraph screening["Non-human screening (--run_kraken2)"]
+        fastq["SAMtools fastq<br/><i>unmapped pairs</i>"] --> kraken2["Kraken2"] --> bracken["Bracken<br/>(--run_bracken)"]
+    end
+
+    report["Report<br/><i>per-sample calls, sex check, flags</i>"]
+    multiqc["MultiQC"]
+    summary[/"summary.samples.tsv"/]
+
+    samplesheet --> extract & coverage & fastq
+    faidx --> extract & coverage
+    restrict --> extract
+    untar --> kraken2
+    extract --> relate & identity & anchored & attribute
+    background --> identity & attribute
+    identity -- "genotype groups" --> anchored
+    relate -- "X heterozygosity, CHARR" --> report
+    identity & anchored & attribute --> report
+    coverage -- "chrY / autosomal reads" --> report
+    report --> summary & multiqc
+    relate & bracken --> multiqc
+```
+
+</details>
 
 ## Usage
 
@@ -43,13 +99,13 @@ First, prepare a samplesheet with your input data that looks as follows:
 `samplesheet.csv`:
 
 ```csv
-sample,bam,bai,individual,batch
-PATIENT1_TUMOR,/data/PATIENT1_TUMOR.bam,/data/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01
-PATIENT1_NORMAL,/data/PATIENT1_NORMAL.bam,/data/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01
-PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02
+sample,bam,bai,individual,batch,sex
+PATIENT1_TUMOR,/data/PATIENT1_TUMOR.bam,/data/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01,female
+PATIENT1_NORMAL,/data/PATIENT1_NORMAL.bam,/data/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01,female
+PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02,male
 ```
 
-Each row is one BAM/CRAM. `individual` (optional) groups samples of the same patient: they are checked for identity and used as clean anchors. `batch` (optional, e.g. the sequencing run or library-prep plate) limits the search for contamination sources to samples processed together, which keeps the all-vs-all comparison tractable for thousands of samples. Identity checks always run across all batches.
+Each row is one BAM/CRAM. `individual` (optional) groups samples of the same patient: they are checked for identity and used as clean anchors. `batch` (optional, e.g. the sequencing run or library-prep plate) limits the search for contamination sources to samples processed together, which keeps the all-vs-all comparison tractable for thousands of samples. Identity checks always run across all batches. `sex` (optional, `male`/`female`) is compared with the sex inferred from the data.
 
 Now, you can run the pipeline using:
 
@@ -103,7 +159,7 @@ For more details and further functionality, please refer to the [usage documenta
 
 ## Pipeline output
 
-The main result is `contamination/contaminationqc.summary.samples.tsv` with one row per sample: contamination estimates (CHARR, mixture model), the most likely source sample with its contamination fraction and log-likelihood ratio, and a call. To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/contaminationqc/results) tab on the nf-core website pipeline page.
+The main result is `contamination/contaminationqc.summary.samples.tsv` with one row per sample: contamination estimates (CHARR, mixture model), the most likely source sample with its contamination fraction and log-likelihood ratio, a call, and the inferred vs. annotated sex (`sex_check`). To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/contaminationqc/results) tab on the nf-core website pipeline page.
 For more details about the output files and reports, please refer to the
 [output documentation](https://nf-co.re/contaminationqc/output).
 

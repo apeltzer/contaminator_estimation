@@ -12,6 +12,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 
 - [Contamination](#contamination) - Per-sample calls, source attribution, identity and relatedness flags
 - [somalier](#somalier) - Extracted allele counts, relatedness and anchored contamination estimates
+- [SAMtools coverage](#samtools-coverage) - MAPQ-filtered read counts per contig for the sex check
 - [Kraken2 / Bracken](#kraken2--bracken) - Non-human read classification (optional)
 - [References](#references) - Panel-restricted sites (optional)
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
@@ -23,7 +24,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <summary>Output files</summary>
 
 - `contamination/`
-  - `contaminationqc.summary.samples.tsv`: one row per sample with `call`, `contamination_charr` (somalier CHARR), `alpha_unknown_source` (mixture model, source-agnostic), `best_source` / `best_source_individual` / `source_alpha` / `source_llr_vs_unknown` / `llr_margin` (best candidate source among cohort and background samples of other individuals), `somalier_anchored_mle_same_individual` (median anchored MLE against samples of the same individual), depth and genotype statistics from `somalier relate`.
+  - `contaminationqc.summary.samples.tsv`: one row per sample with `call`, `contamination_charr` (somalier CHARR), `alpha_unknown_source` (mixture model, source-agnostic), `best_source` / `best_source_individual` / `source_alpha` / `source_llr_vs_unknown` / `llr_margin` (best candidate source among cohort and background samples of other individuals), `somalier_anchored_mle_same_individual` (median anchored MLE against samples of the same individual), depth and genotype statistics from `somalier relate`, and the sex check: `sex_annotated`, `sex_inferred`, `sex_check` (`ok`, `not_annotated`, `undetermined` or `SEX_MISMATCH(...)`, see [usage](usage.md#sex-check)), `sex_y_rpm` (chrY reads per million autosomal reads), `sex_x_het_fraction` / `sex_x_informative_sites` (X heterozygosity), `sex_chrY_reads`, `sex_autosomal_reads`.
   - `contaminationqc.attribution.pairs.tsv.gz`: receiver × candidate table (`alpha_source`, `llr_vs_unknown`, `llr_vs_clean`, informative sites, hom-hom discordance, somalier relatedness/concordance, anchored MLE). Limited to the best `--report_top_candidates` per receiver if set.
   - `contaminationqc.longitudinal.pairs.tsv`: pairs expected to be the same individual (samplesheet `individual`) or genotype-identical, with `flag` `ok` or `IDENTITY_MISMATCH(...)`. Includes cross-batch and background pairs.
   - `contaminationqc.relatedness_flags.tsv`: `expected_same_but_discordant`, `unexpected_identity(swap/duplicate)` and `elevated_relatedness(contamination/family)` pairs.
@@ -40,6 +41,15 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - `somalier/extract/<sample>.somalier`: allele counts at the sites. Keep these to use as `--somalier_background` in later runs.
 - `somalier/relate/<batch>.relate.{html,pairs.tsv,samples.tsv}`: interactive relatedness report and tables (all pairs).
 - `somalier/contamination/<group>.contamination.{samples,pairs}.tsv`: CHARR and anchored contamination MLEs, per genotype group (default) or per batch (`--somalier_anchored_all_pairs`).
+
+</details>
+
+### SAMtools coverage
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `samtools/coverage/<sample>.coverage.txt`: `samtools coverage` per contig (reads with MAPQ `>= --sex_check_min_mapq`, no duplicates/secondary/QC-fail), used for the sex check. Not produced with `--skip_sex_check`.
 
 </details>
 

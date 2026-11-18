@@ -12,6 +12,7 @@ process SOMALIERCONTAM_REPORT {
     tuple val(meta2), path(attribution_pairs, arity: '1..*', stageAs: 'attribution/pairs/*'), path(attribution_self, arity: '1..*', stageAs: 'attribution/self/*')
     tuple val(meta3), path(relate_samples, arity: '0..*', stageAs: 'relate/samples/*'), path(relate_pairs, arity: '0..*', stageAs: 'relate/pairs/*')
     tuple val(meta4), path(contamination_pairs, arity: '0..*', stageAs: 'contamination/pairs/*')
+    tuple val(meta5), path(coverage, arity: '0..*', stageAs: 'coverage/*')
 
     output:
     tuple val(meta), path("*.summary.samples.tsv")      , emit: summary
@@ -32,6 +33,7 @@ process SOMALIERCONTAM_REPORT {
     def relate_samples_arg = relate_samples ? "--relate-samples ${relate_samples.join(' ')}" : ''
     def relate_pairs_arg   = relate_pairs ? "--relate-pairs ${relate_pairs.join(' ')}" : ''
     def contamination_arg  = contamination_pairs ? "--contam-pairs ${contamination_pairs.join(' ')}" : ''
+    def coverage_arg       = coverage ? "--coverage ${coverage.join(' ')}" : ''
     """
     export MPLCONFIGDIR=\$PWD/.matplotlib
 
@@ -44,6 +46,7 @@ process SOMALIERCONTAM_REPORT {
         ${relate_samples_arg} \\
         ${relate_pairs_arg} \\
         ${contamination_arg} \\
+        ${coverage_arg} \\
         --prefix ${prefix} \\
         ${args}
     """

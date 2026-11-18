@@ -1,0 +1,80 @@
+{
+    "test_samtools_coverage - stub": {
+        "content": [
+            {
+                "coverage": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.txt:md5,5b5fbaf1b8a9645ab2e9d34891ae165a"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "SAMTOOLS_COVERAGE",
+                        "samtools",
+                        "1.25"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-28T06:53:56.280938",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.4"
+        }
+    },
+    "test_samtools_coverage_bam": {
+        "content": [
+            {
+                "coverage": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.txt:md5,99a521b3bf53b6acf8055a44a571ea84"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "SAMTOOLS_COVERAGE",
+                        "samtools",
+                        "1.25"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-28T06:52:04.126641",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.4"
+        }
+    },
+    "test_samtools_coverage_cram": {
+        "content": [
+            {
+                "coverage": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.txt:md5,ce896534bac51cfcc97e5508ae907e99"
+                    ]
+                ],
+                "versions_samtools": [
+                    [
+                        "SAMTOOLS_COVERAGE",
+                        "samtools",
+                        "1.25"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-10-28T06:52:08.948053",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.4"
+        }
+    }
+}

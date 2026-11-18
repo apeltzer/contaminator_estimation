@@ -49,7 +49,7 @@
                     [
                         "SOMALIERCONTAM_REPORT",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ],
                 "7": [
@@ -113,12 +113,12 @@
                     [
                         "SOMALIERCONTAM_REPORT",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:59:05.742938",
+        "timestamp": "2026-11-18T12:27:01.606633",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"
@@ -131,7 +131,7 @@
                     {
                         "id": "test"
                     },
-                    "test.summary.samples.tsv:md5,2b4299f57ee55879ea597ef9e6060662"
+                    "test.summary.samples.tsv:md5,50b1da1ad6e19bc388b1bbcf42b98303"
                 ]
             ],
             [
@@ -157,7 +157,7 @@
                     },
                     [
                         "test_generalstats_mqc.tsv:md5,23c9960bf4bff60ae642cd99b97e003d",
-                        "test_summary_mqc.tsv:md5,034894b626e8b729ac7111d646382fa3"
+                        "test_summary_mqc.tsv:md5,9b37a46567bcbe82a2715f1446f5f309"
                     ]
                 ]
             ],
@@ -214,12 +214,12 @@
                     [
                         "SOMALIERCONTAM_REPORT",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:59:00.429966",
+        "timestamp": "2026-11-18T12:33:54.568202",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"

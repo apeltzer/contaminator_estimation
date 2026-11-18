@@ -7,14 +7,14 @@
                         {
                             "id": "sites"
                         },
-                        "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b"
+                        "sites.panel.vcf:md5,ae524aeface83a629f3efe936f120627"
                     ]
                 ],
                 "1": [
                     [
                         "SOMALIERCONTAM_RESTRICTSITES",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ],
                 "2": [
@@ -29,7 +29,7 @@
                         {
                             "id": "sites"
                         },
-                        "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b"
+                        "sites.panel.vcf:md5,ae524aeface83a629f3efe936f120627"
                     ]
                 ],
                 "versions_python": [
@@ -43,12 +43,12 @@
                     [
                         "SOMALIERCONTAM_RESTRICTSITES",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:47:09.838589",
+        "timestamp": "2026-11-18T12:27:07.136726",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"
@@ -69,7 +69,7 @@
                     [
                         "SOMALIERCONTAM_RESTRICTSITES",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ],
                 "2": [
@@ -98,12 +98,12 @@
                     [
                         "SOMALIERCONTAM_RESTRICTSITES",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:47:14.373148",
+        "timestamp": "2026-11-18T12:27:11.890001",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"

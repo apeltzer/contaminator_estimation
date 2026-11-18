@@ -2,12 +2,13 @@
 name: somaliercontam_report
 description:
   Merge attribution, identity, somalier relate and somalier contamination results into per-sample contamination
-  calls and pair tables
+  calls and pair tables, and optionally compare inferred (chrY reads, X heterozygosity) with annotated sex
 keywords:
   - contamination
   - report
   - somalier
   - identity
+  - sex
 tools:
   - somalier_contam:
       description: Contamination-source attribution and sample identity on top of somalier allele counts
@@ -79,6 +80,18 @@ input:
         type: file
         description: somalier contamination pairs tables (may be empty)
         pattern: "*.pairs.tsv"
+        ontologies: []
+  - - meta5:
+        type: map
+        description: "Groovy Map
+
+          "
+    - coverage:
+        type: file
+        description:
+          MAPQ-filtered samtools coverage tables, one per sample named <sample>[.coverage].txt (may be empty).
+          Enables the comparison of inferred and annotated sex (sample table column 'sex').
+        pattern: "*.txt"
         ontologies: []
 output:
   summary:

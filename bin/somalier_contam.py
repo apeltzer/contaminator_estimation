@@ -12,7 +12,8 @@ Subcommands
   restrict-sites   keep only sites inside (padded) panel targets
   identity         hom-hom discordance between samples, genotype (= individual) groups
   attribute        per receiver x candidate mixture LLRs (shardable over receivers)
-  report           merge attribution, identity, somalier relate + contamination; per-sample calls
+  report           merge attribution, identity, somalier relate + contamination; per-sample calls and
+                   (with --coverage) inferred vs annotated sex
 
 Sample table (TSV, header), used by identity/attribute/report:
   sample      unique sample ID (pipeline ID)
@@ -21,11 +22,13 @@ Sample table (TSV, header), used by identity/attribute/report:
   batch       optional batch ID
   role        'cohort' (receiver + candidate) or 'background' (candidate only)
   input       optional original BAM/CRAM name (report only)
+  sex         optional annotated sex: male/female (M/F accepted), empty = unknown (report only)
 """
 import argparse
 import bisect
 import collections
 import gzip
+import re
 import struct
 import sys
 from pathlib import Path
@@ -33,9 +36,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 XY = {"X", "chrX", "NC_000023.10", "NC_000023.11", "Y", "chrY", "NC_000024.9", "NC_000024.10"}
+Y_CONTIGS = {"Y", "chrY", "NC_000024.9", "NC_000024.10"}
+AUTOSOME = re.compile(r"^(chr)?([1-9]|1[0-9]|2[0-2])$|^NC_0000(0[1-9]|1[0-9]|2[0-2])\.\d+$")
 # alpha grid: fine below 5 % where it matters, coarser above
 GRID = np.unique(np.r_[np.arange(0, 0.05, 0.0005), np.arange(0.05, 0.5 + 1e-9, 0.005)])
 
@@ -137,7 +142,7 @@ def load_table(path):
     for col in ("sample", "file"):
         if col not in t.columns:
             sys.exit(f"sample table {path} lacks column '{col}'")
-    for col, default in (("individual", ""), ("batch", ""), ("role", "cohort"), ("input", "")):
+    for col, default in (("individual", ""), ("batch", ""), ("role", "cohort"), ("input", ""), ("sex", "")):
         if col not in t.columns:
             t[col] = default
     t.loc[t.role == "", "role"] = "cohort"
@@ -303,10 +308,58 @@ def pair_key(a, b):
     return np.where(a < b, np.char.add(np.char.add(a, "\t"), b), np.char.add(np.char.add(b, "\t"), a))
 
 
+def normalise_sex(x):
+    return {"m": "male", "male": "male", "f": "female", "female": "female"}.get(str(x).strip().lower(), "")
+
+
+def read_coverage(paths):
+    """chrY and autosomal read counts from `samtools coverage` tables named <sample>[.coverage].txt."""
+    rows = []
+    for p in paths:
+        cov = pd.read_csv(p, sep="\t", dtype={"#rname": str}).rename(columns=lambda c: c.lstrip("#"))
+        auto = cov.rname.str.match(AUTOSOME)
+        if not auto.any():  # non-standard contig names: everything except sex chromosomes and mitochondria
+            auto = ~cov.rname.isin(XY | {"M", "MT", "chrM", "chrMT"})
+        y = cov.rname.isin(Y_CONTIGS)
+        name = Path(p).name
+        rows.append({"sample": re.sub(r"(\.coverage)?\.txt$", "", name),
+                     "sex_chrY_reads": cov.numreads[y].sum() if y.any() else np.nan,
+                     "sex_autosomal_reads": cov.numreads[auto].sum()})
+    return pd.DataFrame(rows, columns=["sample", "sex_chrY_reads", "sex_autosomal_reads"])
+
+
+def sex_check(summ, args):
+    """Infer sex from chrY reads (per million autosomal reads, MAPQ-filtered upstream) with X heterozygosity
+    (somalier relate) as second signal, and compare with the annotated sex.
+
+    chrY decides when it is clearly present or absent. In the grey zone (e.g. a female contaminated with male
+    DNA) X heterozygosity can still call female. A single X (low X heterozygosity) is never used to call male:
+    X loss of heterozygosity is common in tumours. Loss of Y is common in tumours of male patients, so an
+    annotated male without chrY is reported as a possible loss of Y unless X heterozygosity shows two X.
+    """
+    with np.errstate(divide="ignore", invalid="ignore"):
+        summ["sex_y_rpm"] = summ.sex_chrY_reads / summ.sex_autosomal_reads * 1e6
+    n_x = summ.get("X_het", pd.Series(np.nan, index=summ.index)) + summ.get("X_hom_alt", np.nan)
+    summ["sex_x_informative_sites"] = n_x
+    with np.errstate(divide="ignore", invalid="ignore"):
+        summ["sex_x_het_fraction"] = summ.get("X_het", np.nan) / n_x.where(n_x > 0)
+    y = summ.sex_y_rpm
+    xx = (n_x >= args.sex_min_x_sites) & (summ.sex_x_het_fraction >= args.sex_xx_min_het_fraction)
+    y_call = np.select([y >= args.sex_male_min_y_rpm, y <= args.sex_female_max_y_rpm], ["male", "female"], "")
+    summ["sex_inferred"] = np.where(y_call != "", y_call, np.where(xx, "female", "undetermined"))
+    ann, inf = summ.sex_annotated, summ.sex_inferred
+    summ["sex_check"] = np.select(
+        [ann == "", inf == "undetermined", ann == inf, (ann == "male") & xx, ann == "male"],
+        ["not_annotated", "undetermined", "ok", "SEX_MISMATCH", "SEX_MISMATCH(no_Y:swap_or_loss_of_Y?)"],
+        "SEX_MISMATCH(Y_present:swap_or_male_contamination?)")
+    return summ.drop(columns=[c for c in ("X_het", "X_hom_alt") if c in summ.columns])
+
+
 def write_mqc(summ, prefix):
     """MultiQC custom-content tables (sample names = pipeline sample IDs)."""
     cols = ["sample", "call", "contamination_charr", "alpha_unknown_source", "best_source", "source_alpha",
-            "source_llr_vs_unknown", "llr_margin", "somalier_anchored_mle_same_individual", "genotype_group"]
+            "source_llr_vs_unknown", "llr_margin", "somalier_anchored_mle_same_individual", "genotype_group",
+            "sex_annotated", "sex_inferred", "sex_check", "sex_y_rpm", "sex_x_het_fraction"]
     cols = [c for c in cols if c in summ.columns]
     with open(f"{prefix}_summary_mqc.tsv", "w") as fh:
         fh.write("# id: 'contaminationqc_summary'\n# section_name: 'Contamination and source attribution'\n"
@@ -465,6 +518,8 @@ def cmd_report(args):
     summ = summ.merge(selfdf, on="sample", how="left")
     rel_s = read_somalier_tsvs(args.relate_samples)
     keep = ["sample_id", "depth_mean", "gt_depth_mean", "n_het", "n_unknown", "p_middling_ab", "contamination_charr"]
+    if args.coverage:
+        keep += ["X_het", "X_hom_alt"]
     if rel_s is not None and len(rel_s):
         rel_s["sample_id"] = to_sample(rel_s.sample_id.astype(str))
         summ = summ.merge(rel_s[[c for c in keep if c in rel_s.columns]].drop_duplicates("sample_id")
@@ -490,9 +545,16 @@ def cmd_report(args):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)  # nanmax of all-NaN, as in the original
             summ["call"] = summ.apply(call, axis=1) if len(summ) else []
+
+    # ---- inferred vs annotated sex
+    if args.coverage:
+        summ["sex_annotated"] = summ["sample"].map(dict(zip(cohort["sample"], cohort.sex.map(normalise_sex))))
+        summ = sex_check(summ.merge(read_coverage(args.coverage), on="sample", how="left"), args)
     lead = ["sample", "individual", "genotype_group", "call", "contamination_charr", "alpha_unknown_source",
             "p_middling_ab", "best_source", "best_source_individual", "source_alpha", "source_llr_vs_unknown",
-            "llr_margin", "source_n_informative", "somalier_anchored_mle_same_individual", "n_hom_sites"]
+            "llr_margin", "source_n_informative", "somalier_anchored_mle_same_individual", "n_hom_sites",
+            "sex_annotated", "sex_inferred", "sex_check", "sex_y_rpm", "sex_x_het_fraction", "sex_x_informative_sites",
+            "sex_chrY_reads", "sex_autosomal_reads"]
     summ = summ[[c for c in lead if c in summ.columns] + [c for c in summ.columns if c not in lead]]
     summ.to_csv(f"{args.prefix}.summary.samples.tsv", sep="\t", index=False, float_format="%.4g")
     write_mqc(summ, args.prefix)
@@ -553,7 +615,8 @@ def cmd_report(args):
 
     with pd.option_context("display.width", 200, "display.max_columns", 20, "display.max_rows", 200):
         print(summ[[c for c in ["sample", "call", "contamination_charr", "alpha_unknown_source", "best_source",
-                                "source_alpha", "source_llr_vs_unknown", "llr_margin"] if c in summ.columns]]
+                                "source_alpha", "source_llr_vs_unknown", "llr_margin", "sex_check"]
+                      if c in summ.columns]]
               .head(200).to_string(index=False))
 
 
@@ -609,6 +672,16 @@ def main(argv=None):
     p.add_argument("--top-candidates", type=int, default=0, help="keep only the top N candidates per receiver in "
                    "attribution.pairs.tsv.gz (0 = all) [0]")
     p.add_argument("--max-heatmap-samples", type=int, default=200)
+    p.add_argument("--coverage", nargs="*", default=[], help="`samtools coverage` tables (MAPQ-filtered, one per "
+                   "sample, named <sample>[.coverage].txt); enables the sex check")
+    p.add_argument("--sex-female-max-y-rpm", type=float, default=50, help="chrY reads per million autosomal reads at "
+                   "or below which a sample is female [50]")
+    p.add_argument("--sex-male-min-y-rpm", type=float, default=200, help="chrY reads per million autosomal reads at "
+                   "or above which a sample is male [200]")
+    p.add_argument("--sex-min-x-sites", type=int, default=5, help="min X sites with a non-reference genotype to use "
+                   "X heterozygosity [5]")
+    p.add_argument("--sex-xx-min-het-fraction", type=float, default=0.2, help="X het / (het + hom-alt) at or above "
+                   "which a sample has two X chromosomes [0.2]")
     p.add_argument("--prefix", default="contaminationqc")
     p.set_defaults(func=cmd_report)
 

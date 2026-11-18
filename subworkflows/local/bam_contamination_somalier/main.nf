@@ -6,7 +6,7 @@
 //   SOMALIERCONTAM_IDENTITY     global (cohort + background) -> genotype groups, identity pairs
 //   SOMALIER_CONTAMINATION      per genotype group (default) or per batch (all ordered pairs)
 //   SOMALIERCONTAM_ATTRIBUTE    per batch x receiver shard (candidates: batch cohort + background)
-//   SOMALIERCONTAM_REPORT       global
+//   SOMALIERCONTAM_REPORT       global (+ inferred vs annotated sex from samtools coverage tables)
 //
 
 include { SOMALIER_EXTRACT             } from '../../../modules/nf-core/somalier/extract/main'
@@ -18,7 +18,7 @@ include { SOMALIERCONTAM_REPORT        } from '../../../modules/local/somalierco
 
 // Header of the sample table read by somalier_contam.py
 def sampleTableHeader() {
-    return "sample\tfile\tindividual\tbatch\trole\tinput"
+    return "sample\tfile\tindividual\tbatch\trole\tinput\tsex"
 }
 
 // Sample name stored inside a .somalier file (format v2: version byte, name length byte, name)
@@ -32,17 +32,18 @@ def somalierSampleName(somalier) {
 
 // One row of the sample table read by somalier_contam.py. Files are staged as somalier/<name>.
 def sampleTableRow(meta, somalier, input_name) {
-    return [ meta.id, "somalier/${somalier.name}", meta.individual ?: '', meta.batch ?: '', meta.role, input_name ?: '' ].join('\t')
+    return [ meta.id, "somalier/${somalier.name}", meta.individual ?: '', meta.batch ?: '', meta.role, input_name ?: '', meta.sex ?: '' ].join('\t')
 }
 
 workflow BAM_CONTAMINATION_SOMALIER {
 
     take:
-    ch_bam                 // channel: [ val(meta), path(bam), path(bai) ]  meta: id, individual, batch
+    ch_bam                 // channel: [ val(meta), path(bam), path(bai) ]  meta: id, individual, batch, sex
     ch_background          // channel: [ val(meta), path(somalier) ]        meta: id, individual, role
     ch_fasta               // channel: [ val(meta), path(fasta) ]
     ch_fai                 // channel: [ val(meta), path(fai) ]
     ch_sites               // channel: [ val(meta), path(vcf) ]
+    ch_coverage            // channel: [ val(meta), path(txt) ]  samtools coverage per sample (sex check); empty = skip
     attribution_chunk_size // integer: receivers per attribution task
     anchored_all_pairs     // boolean: run somalier contamination on all ordered pairs per batch
 
@@ -175,7 +176,9 @@ workflow BAM_CONTAMINATION_SOMALIER {
             .combine(SOMALIER_RELATE.out.pairs_tsv.map { _meta, tsv -> tsv }.collect(sort: true).map { tsv -> [ tsv ] })
             .map { samples, pairs -> [ [ id: 'relate' ], samples, pairs ] },
         SOMALIER_CONTAMINATION.out.pairs_tsv.map { _meta, tsv -> tsv }.collect(sort: true).ifEmpty([])
-            .map { pairs -> [ [ id: 'contamination' ], pairs ] }
+            .map { pairs -> [ [ id: 'contamination' ], pairs ] },
+        ch_coverage.map { _meta, txt -> txt }.collect(sort: { a, b -> a.name <=> b.name }).ifEmpty([])
+            .map { coverage -> [ [ id: 'coverage' ], coverage ] }
     )
 
     def ch_multiqc_files = SOMALIERCONTAM_REPORT.out.multiqc.map { _meta, files -> files }.flatten()

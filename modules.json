@@ -20,6 +20,11 @@
                         "git_sha": "868791e991feaaeff234b79f7910b6b442627529",
                         "installed_by": ["modules"]
                     },
+                    "samtools/coverage": {
+                        "branch": "master",
+                        "git_sha": "80eb474060aa4aa6d7b4b00e0dc785174f156a28",
+                        "installed_by": ["modules"]
+                    },
                     "samtools/faidx": {
                         "branch": "master",
                         "git_sha": "80eb474060aa4aa6d7b4b00e0dc785174f156a28",

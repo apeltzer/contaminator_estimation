@@ -22,7 +22,7 @@
                     [
                         "SOMALIERCONTAM_IDENTITY",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ],
                 "3": [
@@ -59,12 +59,12 @@
                     [
                         "SOMALIERCONTAM_IDENTITY",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:46:45.005866",
+        "timestamp": "2026-11-18T12:59:06.700993",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"
@@ -93,7 +93,7 @@
                     [
                         "SOMALIERCONTAM_IDENTITY",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ],
                 "3": [
@@ -130,12 +130,12 @@
                     [
                         "SOMALIERCONTAM_IDENTITY",
                         "somalier_contam",
-                        "1.0.0"
+                        "1.1.0"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-17T19:46:40.433691",
+        "timestamp": "2026-11-18T12:59:02.018403",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.10.6"

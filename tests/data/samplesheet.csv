@@ -1,7 +1,7 @@
-sample,bam,bai,individual,batch
-P1_N,tests/data/P1_N.bam,tests/data/P1_N.bam.bai,P1,
-P1_T,tests/data/P1_T.bam,tests/data/P1_T.bam.bai,P1,
-P2_A,tests/data/P2_A.bam,tests/data/P2_A.bam.bai,P2,
-P3_A,tests/data/P3_A.bam,tests/data/P3_A.bam.bai,P3,
-P4_A,tests/data/P4_A.bam,tests/data/P4_A.bam.bai,P4,
-P6_A,tests/data/P6_A.bam,tests/data/P6_A.bam.bai,P6,
+sample,bam,bai,individual,batch,sex
+P1_N,tests/data/P1_N.bam,tests/data/P1_N.bam.bai,P1,,female
+P1_T,tests/data/P1_T.bam,tests/data/P1_T.bam.bai,P1,,female
+P2_A,tests/data/P2_A.bam,tests/data/P2_A.bam.bai,P2,,M
+P3_A,tests/data/P3_A.bam,tests/data/P3_A.bam.bai,P3,,female
+P4_A,tests/data/P4_A.bam,tests/data/P4_A.bam.bai,P4,,
+P6_A,tests/data/P6_A.bam,tests/data/P6_A.bam.bai,P6,,female

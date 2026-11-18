@@ -30,6 +30,10 @@ nextflow_pipeline {
                 { assert summary.find { it.startsWith('P3_A\t') }.contains('\tP2_A\t') },
                 { assert summary.find { it.startsWith('P4_A\t') }.contains('contaminated_source_not_in_cohort') },
                 { assert summary.findAll { it.contains('\tclean\t') }.size() == 4 },
+                // sex check: P6_A is male but annotated female, P4_A has no annotated sex
+                { assert summary.find { it.startsWith('P6_A\t') }.contains('\tSEX_MISMATCH(Y_present:swap_or_male_contamination?)\t') },
+                { assert summary.find { it.startsWith('P4_A\t') }.contains('\tnot_annotated\t') },
+                { assert summary.findAll { it.contains('\tok\t') }.size() == 4 },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml"),
@@ -57,6 +61,7 @@ nextflow_pipeline {
                 run_kraken2                 = false
                 somalier_anchored_all_pairs = true
                 attribution_chunk_size      = 2
+                skip_sex_check              = true
             }
         }
 

@@ -111,7 +111,7 @@ workflow PIPELINE_INITIALISATION {
     channel
         .fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map { meta, bam, bai ->
-            [ meta + [ individual: meta.individual ?: '', batch: meta.batch ?: '' ], bam, bai ]
+            [ meta + [ individual: meta.individual ?: '', batch: meta.batch ?: '', sex: normaliseSex(meta.sex) ], bam, bai ]
         }
         .set { ch_samplesheet }
 
@@ -209,6 +209,14 @@ workflow PIPELINE_COMPLETION {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 //
+// Annotated sex from the samplesheet as 'male', 'female' or '' (unknown)
+//
+def normaliseSex(sex) {
+    def s = (sex ?: '').toString().trim().toLowerCase()
+    return s in [ 'm', 'male' ] ? 'male' : s in [ 'f', 'female' ] ? 'female' : ''
+}
+
+//
 // Check and validate pipeline parameters
 //
 def validateInputParameters() {
@@ -278,8 +286,8 @@ def genomeExistsError() {
 def toolCitationText() {
     def citation_text = [
             "Tools used in the workflow included:",
-            "somalier (Pedersen et al. 2020),",
-            params.run_kraken2 ? "SAMtools (Danecek et al. 2021), Kraken2 (Wood et al. 2019)," : "",
+            "somalier (Pedersen et al. 2020), SAMtools (Danecek et al. 2021),",
+            params.run_kraken2 ? "Kraken2 (Wood et al. 2019)," : "",
             params.run_bracken ? "Bracken (Lu et al. 2017)," : "",
             "and MultiQC (Ewels et al. 2016)",
             "."
@@ -291,7 +299,7 @@ def toolCitationText() {
 def toolBibliographyText() {
     def reference_text = [
             "<li>Pedersen, B. S., Bhetariya, P. J., Brown, J., Kravitz, S. N., Marth, G., Jensen, R. L., Bronner, M. P., Underhill, H. R., & Quinlan, A. R. (2020). Somalier: rapid relatedness estimation for cancer and germline studies using efficient genome sketches. Genome Medicine, 12(1), 62. doi: 10.1186/s13073-020-00761-2</li>",
-            params.run_kraken2 ? "<li>Danecek, P., Bonfield, J. K., Liddle, J., Marshall, J., Ohan, V., Pollard, M. O., Whitwham, A., Keane, T., McCarthy, S. A., Davies, R. M., & Li, H. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>" : "",
+            "<li>Danecek, P., Bonfield, J. K., Liddle, J., Marshall, J., Ohan, V., Pollard, M. O., Whitwham, A., Keane, T., McCarthy, S. A., Davies, R. M., & Li, H. (2021). Twelve years of SAMtools and BCFtools. GigaScience, 10(2), giab008. doi: 10.1093/gigascience/giab008</li>",
             params.run_kraken2 ? "<li>Wood, D. E., Lu, J., & Langmead, B. (2019). Improved metagenomic analysis with Kraken 2. Genome Biology, 20(1), 257. doi: 10.1186/s13059-019-1891-0</li>" : "",
             params.run_bracken ? "<li>Lu, J., Breitwieser, F. P., Thielen, P., & Salzberg, S. L. (2017). Bracken: estimating species abundance in metagenomics data. PeerJ Computer Science, 3, e104. doi: 10.7717/peerj-cs.104</li>" : "",
             "<li>Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics , 32(19), 3047–3048. doi: /10.1093/bioinformatics/btw354</li>"

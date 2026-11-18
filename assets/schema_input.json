@@ -40,6 +40,13 @@
                 "errorMessage": "Batch ID may only contain letters, digits, '.', '_' and '-'",
                 "meta": ["batch"],
                 "default": ""
+            },
+            "sex": {
+                "type": "string",
+                "pattern": "^([Mm]ale|[Ff]emale|MALE|FEMALE|[MmFf]|[Uu]nknown|UNKNOWN|NA)?$",
+                "errorMessage": "Sex must be 'male' or 'female' ('M'/'F' accepted), or empty/'unknown'/'NA' if not known",
+                "meta": ["sex"],
+                "default": ""
             }
         },
         "required": ["sample", "bam", "bai"]

@@ -6,7 +6,7 @@
 
 ## Introduction
 
-nf-core/contaminationqc takes aligned human BAM/CRAM files and answers four questions per sample:
+nf-core/contaminationqc takes aligned human BAM/CRAM files and answers five questions per sample:
 
 1. **Is it contaminated with human DNA, and how much?** (somalier CHARR, mixture-model fraction `alpha_unknown_source`)
 2. **Whose DNA is it?** For every receiver R and candidate C, at the sites where R is homozygous-like it compares
@@ -14,7 +14,9 @@ nf-core/contaminationqc takes aligned human BAM/CRAM files and answers four ques
    `LLR = max_a LL_source - max_a LL_unknown`. LLR >> 0 means C explains R's foreign alleles better than a random person.
 3. **Is it who it claims to be?** Hom-hom discordance is robust to a few % contamination, so samples of the same individual
    are recognised even when one of them is contaminated (swaps, longitudinal samples).
-4. **Is there non-human DNA?** (optional, Kraken2 on unmapped read pairs)
+4. **Does the sex match the annotation?** chrY reads and X heterozygosity vs. the samplesheet column `sex`
+   (catches swaps between patients of different sex that have no other sample to compare against).
+5. **Is there non-human DNA?** (optional, Kraken2 on unmapped read pairs)
 
 ## Samplesheet input
 
@@ -31,12 +33,13 @@ You will need to create a samplesheet with information about the samples you wou
 | `bai`        | Index (`.bai`, `.csi`, `.crai`).                                                                                                                                  |
 | `individual` | Optional patient/individual ID. Samples of the same individual are expected to be genotype-identical (`longitudinal.pairs.tsv`) and serve as each other's anchor. |
 | `batch`      | Optional batch (e.g. sequencing run). Relatedness and source attribution run within a batch; identity checks run across batches.                                  |
+| `sex`        | Optional annotated sex: `male` or `female` (`M`/`F` and other capitalisations accepted; empty, `unknown` or `NA` = not annotated). See [Sex check](#sex-check).   |
 
 ```csv title="samplesheet.csv"
-sample,bam,bai,individual,batch
-PATIENT1_TUMOR,/data/PATIENT1_TUMOR.bam,/data/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01
-PATIENT1_NORMAL,/data/PATIENT1_NORMAL.bam,/data/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01
-PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02
+sample,bam,bai,individual,batch,sex
+PATIENT1_TUMOR,/data/PATIENT1_TUMOR.bam,/data/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01,female
+PATIENT1_NORMAL,/data/PATIENT1_NORMAL.bam,/data/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01,female
+PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02,male
 ```
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
@@ -82,6 +85,29 @@ They must have been extracted with the same sites (after panel restriction) as t
 | `…;low_sites`                       | Fewer than 50 homozygous-like sites were usable; interpret with care (low coverage or too few panel sites). |
 
 Samples of the same genotype group (same individual) are never reported as each other's contamination source.
+
+## Sex check
+
+Sex is inferred for every sample (unless `--skip_sex_check`) from two independent signals and compared with the samplesheet column `sex`:
+
+- **chrY reads per million autosomal reads** (`sex_y_rpm`), counted by `samtools coverage` with MAPQ `>= --sex_check_min_mapq` (default 30; removes pseudoautosomal and X-transposed reads that map to X and Y equally well) and without duplicates. `<= --sex_female_max_y_rpm` (default 50) is female, `>= --sex_male_min_y_rpm` (default 200) is male.
+- **X heterozygosity** (`sex_x_het_fraction` = het / (het + hom-alt) at the X sites of the somalier sites file, from `somalier relate`). With at least 5 informative X sites, a fraction `>= 0.2` means two X chromosomes. It decides when chrY is in the grey zone between the thresholds, e.g. a female sample contaminated with male DNA.
+
+| `sex_check`                                           | Meaning                                                                                                                                                    |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ok`                                                  | Inferred and annotated sex agree.                                                                                                                          |
+| `not_annotated`                                       | No sex in the samplesheet; `sex_inferred` is still reported.                                                                                               |
+| `undetermined`                                        | chrY in the grey zone and X heterozygosity inconclusive (or no chrX/chrY in the reference).                                                                |
+| `SEX_MISMATCH(Y_present:swap_or_male_contamination?)` | Annotated female, but chrY present: sample swap, annotation error or heavy contamination with male DNA (check `call`).                                     |
+| `SEX_MISMATCH(no_Y:swap_or_loss_of_Y?)`               | Annotated male, no chrY and no evidence for two X: sample swap, annotation error or **loss of Y**, which is common in tumours (and in blood of older men). |
+| `SEX_MISMATCH`                                        | Annotated male, no chrY and two X chromosomes: sample swap or annotation error.                                                                            |
+
+A single X (no X heterozygosity) is never used to call a sample male, because loss of heterozygosity on X is frequent in tumours.
+
+> [!IMPORTANT]
+> On hybrid-capture panels the chrY signal comes from off-target reads, so the level seen in males depends on the panel's off-target rate (WGS males have ~2,000–4,000 chrY reads per million autosomal reads; panels with few off-target reads can have 10x less). The default thresholds are deliberately conservative. Before relying on the check, look at the distribution of `sex_y_rpm` in the summary of a first run (two clearly separated clusters are expected) and set `--sex_female_max_y_rpm` / `--sex_male_min_y_rpm` between them. The X sites of the somalier sites file must lie inside `--panel_bed` to be used; most panels only cover a few X genes.
+
+The sex check needs chrX and chrY in the reference (`X`/`Y` or `chrX`/`chrY`). It reads every BAM/CRAM once more with `samtools coverage` (single-threaded, a few minutes for a typical panel BAM).
 
 ## Large cohorts
 

@@ -258,6 +258,43 @@
                 }
             }
         },
+        "sex_check_options": {
+            "title": "Sex check options",
+            "type": "object",
+            "fa_icon": "fas fa-venus-mars",
+            "description": "Infer sex from chrY reads and X heterozygosity and compare it with the samplesheet column `sex`.",
+            "properties": {
+                "skip_sex_check": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-forward",
+                    "description": "Skip sex inference (samtools coverage) and the comparison with the annotated sex.",
+                    "help_text": "The sex check needs chrX/chrY in the reference (`X`/`Y` or `chrX`/`chrY`). It reads each BAM/CRAM once more with `samtools coverage`."
+                },
+                "sex_check_min_mapq": {
+                    "type": "integer",
+                    "default": 30,
+                    "minimum": 0,
+                    "fa_icon": "fas fa-filter",
+                    "description": "Minimum mapping quality of reads counted on chrY and the autosomes.",
+                    "help_text": "Removes reads in the pseudoautosomal and X-transposed regions, which map to X and Y equally well and would otherwise give females chrY reads."
+                },
+                "sex_female_max_y_rpm": {
+                    "type": "number",
+                    "default": 50,
+                    "minimum": 0,
+                    "fa_icon": "fas fa-venus",
+                    "description": "chrY reads per million autosomal reads at or below which a sample is inferred female.",
+                    "help_text": "The chrY signal of hybrid-capture panels comes from off-target reads, so the male level depends on the panel's off-target rate. Check `sex_y_rpm` in the summary of a first run and adjust both thresholds to the two clusters. Between the thresholds X heterozygosity decides (female if two X), otherwise the sex is `undetermined`."
+                },
+                "sex_male_min_y_rpm": {
+                    "type": "number",
+                    "default": 200,
+                    "minimum": 0,
+                    "fa_icon": "fas fa-mars",
+                    "description": "chrY reads per million autosomal reads at or above which a sample is inferred male."
+                }
+            }
+        },
         "kraken2_options": {
             "title": "Kraken2 / Bracken options",
             "type": "object",
@@ -483,6 +520,9 @@
         },
         {
             "$ref": "#/$defs/scaling_options"
+        },
+        {
+            "$ref": "#/$defs/sex_check_options"
         },
         {
             "$ref": "#/$defs/kraken2_options"

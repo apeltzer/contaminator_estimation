@@ -4,6 +4,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
+include { SAMTOOLS_COVERAGE          } from '../modules/nf-core/samtools/coverage/main'
 include { PREPARE_REFERENCES         } from '../subworkflows/local/prepare_references'
 include { BAM_CONTAMINATION_SOMALIER } from '../subworkflows/local/bam_contamination_somalier'
 include { BAM_SCREEN_KRAKEN2         } from '../subworkflows/local/bam_screen_kraken2'
@@ -21,7 +22,7 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_cont
 workflow CONTAMINATIONQC {
 
     take:
-    ch_samplesheet // channel: [ val(meta), path(bam), path(bai) ] read in from --input
+    ch_samplesheet // channel: [ val(meta), path(bam), path(bai) ] read in from --input (meta: id, individual, batch, sex)
     ch_background  // channel: [ val(meta), path(somalier) ] read in from --somalier_background
     multiqc_config
     multiqc_logo
@@ -46,7 +47,22 @@ workflow CONTAMINATIONQC {
     )
 
     //
-    // SUBWORKFLOW: somalier relatedness, contamination, source attribution and identity
+    // MODULE: per-contig read counts (MAPQ-filtered) for the sex check
+    //
+    def ch_coverage = channel.empty()
+    if (!params.skip_sex_check) {
+        SAMTOOLS_COVERAGE (
+            ch_samplesheet,
+            PREPARE_REFERENCES.out.fasta
+                .combine(PREPARE_REFERENCES.out.fai)
+                .map { meta, fasta, _meta2, fai -> [ meta, fasta, fai ] }
+                .first()
+        )
+        ch_coverage = SAMTOOLS_COVERAGE.out.coverage
+    }
+
+    //
+    // SUBWORKFLOW: somalier relatedness, contamination, source attribution, identity and sex check
     //
     BAM_CONTAMINATION_SOMALIER (
         ch_samplesheet,
@@ -54,6 +70,7 @@ workflow CONTAMINATIONQC {
         PREPARE_REFERENCES.out.fasta,
         PREPARE_REFERENCES.out.fai,
         PREPARE_REFERENCES.out.sites,
+        ch_coverage,
         params.attribution_chunk_size,
         params.somalier_anchored_all_pairs
     )

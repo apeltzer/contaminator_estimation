@@ -1,4 +1,4 @@
-sample,bam,bai,individual,batch
-PATIENT1_TUMOR,/path/to/PATIENT1_TUMOR.bam,/path/to/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01
-PATIENT1_NORMAL,/path/to/PATIENT1_NORMAL.bam,/path/to/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01
-PATIENT2_TUMOR,/path/to/PATIENT2_TUMOR.cram,/path/to/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02
+sample,bam,bai,individual,batch,sex
+PATIENT1_TUMOR,/path/to/PATIENT1_TUMOR.bam,/path/to/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01,female
+PATIENT1_NORMAL,/path/to/PATIENT1_NORMAL.bam,/path/to/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01,female
+PATIENT2_TUMOR,/path/to/PATIENT2_TUMOR.cram,/path/to/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02,male

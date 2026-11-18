@@ -106,6 +106,7 @@ nextflow_process {
                 input[2] = SOMALIER_RELATE.out.samples_tsv.join(SOMALIER_RELATE.out.pairs_tsv)
                     .map { _meta, samples, pairs -> [ [ id:'relate' ], [ samples ], [ pairs ] ] }
                 input[3] = SOMALIER_CONTAMINATION.out.pairs_tsv.map { _meta, pairs -> [ [ id:'contamination' ], [ pairs ] ] }
+                input[4] = [ [ id:'coverage' ], [ 'P1_N', 'P1_T', 'P2_A', 'P3_A', 'P4_A', 'P6_A' ].collect { sample -> file("${projectDir}/tests/data/coverage/\${sample}.txt", checkIfExists: true) } ]
                 """
             }
         }
@@ -118,6 +119,8 @@ nextflow_process {
                 { assert process.success },
                 { assert rows.collect { row -> row.call } == [ 'clean', 'clean', 'clean', 'source_identified', 'contaminated_source_not_in_cohort', 'clean' ] },
                 { assert rows[3].best_source == 'P2_A' },
+                { assert rows.collect { row -> row.sex_inferred } == [ 'female', 'female', 'male', 'female', 'male', 'male' ] },
+                { assert rows.collect { row -> row.sex_check } == [ 'ok', 'ok', 'ok', 'ok', 'not_annotated', 'SEX_MISMATCH(Y_present:swap_or_male_contamination?)' ] },
                 { assert snapshot(
                     process.out.summary,
                     process.out.longitudinal,
@@ -142,6 +145,7 @@ nextflow_process {
                 input[1] = [ [ id:'attribution' ], [ file("${projectDir}/tests/data/somalier/P2_A.somalier", checkIfExists: true) ], [ file("${projectDir}/tests/data/somalier/P3_A.somalier", checkIfExists: true) ] ]
                 input[2] = [ [ id:'relate' ], [], [] ]
                 input[3] = [ [ id:'contamination' ], [] ]
+                input[4] = [ [ id:'coverage' ], [] ]
                 """
             }
         }

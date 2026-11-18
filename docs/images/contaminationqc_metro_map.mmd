@@ -1,0 +1,74 @@
+%%metro title: nf-core/contaminationqc
+%%metro logo: nf-core-contaminationqc_logo_light.png | nf-core-contaminationqc_logo_dark.png
+%%metro style: nfcore
+%%metro file: bam_in | BAM/CRAM
+%%metro file: summary_out | TSV
+%%metro file: multiqc_out | HTML
+%%metro line: somalier | Contamination, source attribution & identity | #24B064
+%%metro line: sex | Sex check (--skip_sex_check to disable) | #8e5bd6
+%%metro line: kraken | Non-human screening (--run_kraken2) | #f5a623
+%%metro legend: bl
+%%metro grid: input | 0,0,3
+%%metro grid: genotyping | 1,0
+%%metro grid: contamination | 2,0
+%%metro grid: sexcheck | 2,1
+%%metro grid: screening | 1,2,1,2
+%%metro grid: reporting | 3,0,3
+
+graph LR
+    subgraph input [Input]
+        %%metro exit: right | somalier, sex, kraken
+        bam_in[ ]
+        samplesheet[Samplesheet check]
+
+        bam_in -->|somalier,sex,kraken| samplesheet
+    end
+
+    subgraph genotyping [Genotyping]
+        extract[somalier extract]
+        relate[somalier relate]
+
+        extract -->|somalier| relate
+    end
+
+    subgraph contamination [Identity & contamination]
+        identity[Identity groups]
+        anchored[somalier contamination]
+        attribution[Source attribution]
+
+        identity -->|somalier| anchored
+        anchored -->|somalier| attribution
+    end
+
+    subgraph sexcheck [Sex check]
+        coverage[SAMtools coverage]
+    end
+
+    subgraph screening [Non-human screening]
+        fastq[SAMtools fastq]
+        kraken2[Kraken2]
+        bracken[Bracken]
+
+        fastq -->|kraken| kraken2
+        kraken2 -->|kraken| bracken
+    end
+
+    subgraph reporting [Reporting]
+        report[Per-sample calls]
+        summary_out[ ]
+        multiqc[MultiQC]
+        multiqc_out[ ]
+
+        report -->|somalier,sex| summary_out
+        report -->|somalier,sex| multiqc
+        multiqc -->|somalier,sex,kraken| multiqc_out
+    end
+
+    %% Inter-section edges
+    samplesheet -->|somalier| extract
+    samplesheet -->|sex| coverage
+    samplesheet -->|kraken| fastq
+    relate -->|somalier| identity
+    attribution -->|somalier| report
+    coverage -->|sex| report
+    bracken -->|kraken| multiqc
