@@ -6,17 +6,61 @@ This document describes the output produced by the pipeline. Most of the plots a
 
 The directories listed below will be created in the results directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
-
 ## Pipeline overview
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
-
+- [Contamination](#contamination) - Per-sample calls, source attribution, identity and relatedness flags
+- [somalier](#somalier) - Extracted allele counts, relatedness and anchored contamination estimates
+- [Kraken2 / Bracken](#kraken2--bracken) - Non-human read classification (optional)
+- [References](#references) - Panel-restricted sites (optional)
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
+### Contamination
 
+<details markdown="1">
+<summary>Output files</summary>
+
+- `contamination/`
+  - `contaminationqc.summary.samples.tsv`: one row per sample with `call`, `contamination_charr` (somalier CHARR), `alpha_unknown_source` (mixture model, source-agnostic), `best_source` / `best_source_individual` / `source_alpha` / `source_llr_vs_unknown` / `llr_margin` (best candidate source among cohort and background samples of other individuals), `somalier_anchored_mle_same_individual` (median anchored MLE against samples of the same individual), depth and genotype statistics from `somalier relate`.
+  - `contaminationqc.attribution.pairs.tsv.gz`: receiver × candidate table (`alpha_source`, `llr_vs_unknown`, `llr_vs_clean`, informative sites, hom-hom discordance, somalier relatedness/concordance, anchored MLE). Limited to the best `--report_top_candidates` per receiver if set.
+  - `contaminationqc.longitudinal.pairs.tsv`: pairs expected to be the same individual (samplesheet `individual`) or genotype-identical, with `flag` `ok` or `IDENTITY_MISMATCH(...)`. Includes cross-batch and background pairs.
+  - `contaminationqc.relatedness_flags.tsv`: `expected_same_but_discordant`, `unexpected_identity(swap/duplicate)` and `elevated_relatedness(contamination/family)` pairs.
+  - `contaminationqc.<batch>.attribution_llr.png`: heatmap of LLRs (receiver × candidate) for batches with at most `--max_heatmap_samples` samples.
+  - `identity/identity.genotype_groups.tsv`: genotype group (inferred individual) of every sample; `identity/identity.identity_pairs.tsv`: hom-hom discordance for same-individual/same-group pairs.
+
+</details>
+
+### somalier
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `somalier/extract/<sample>.somalier`: allele counts at the sites. Keep these to use as `--somalier_background` in later runs.
+- `somalier/relate/<batch>.relate.{html,pairs.tsv,samples.tsv}`: interactive relatedness report and tables (all pairs).
+- `somalier/contamination/<group>.contamination.{samples,pairs}.tsv`: CHARR and anchored contamination MLEs, per genotype group (default) or per batch (`--somalier_anchored_all_pairs`).
+
+</details>
+
+### Kraken2 / Bracken
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `kraken2/<sample>.kraken2.report.txt`: Kraken2 report of the classified (by default unmapped) read pairs.
+- `bracken/<sample>.tsv`, `bracken/<sample>.kraken2.report_bracken.txt`: Bracken abundance estimates (with `--run_bracken`).
+
+</details>
+
+### References
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `references/<sites>.panel.vcf`: sites restricted to the padded panel targets (with `--panel_bed`).
+
+</details>
 
 ### MultiQC
 

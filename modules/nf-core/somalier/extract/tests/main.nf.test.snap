@@ -1,0 +1,88 @@
+{
+    "homo_sapiens - [ bam, bai ], fasta, fai, sites": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "normal.somalier:md5,bdbb683d6d79f675f373d4aafc0eec7e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "SOMALIER_EXTRACT",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ],
+                "extract": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "normal.somalier:md5,bdbb683d6d79f675f373d4aafc0eec7e"
+                    ]
+                ],
+                "versions_somalier": [
+                    [
+                        "SOMALIER_EXTRACT",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-05T12:18:53.827156828",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.2"
+        }
+    },
+    "homo_sapiens - [ bam, bai ], fasta, fai, sites -stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.somalier:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "SOMALIER_EXTRACT",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ],
+                "extract": [
+                    [
+                        {
+                            "id": "test",
+                            "single_end": false
+                        },
+                        "test.somalier:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_somalier": [
+                    [
+                        "SOMALIER_EXTRACT",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-05T12:18:58.61282277",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.2"
+        }
+    }
+}

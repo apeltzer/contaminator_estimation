@@ -1,0 +1,112 @@
+{
+    "synthetic - sites.vcf.gz, panel.bed": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "sites"
+                        },
+                        "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b"
+                    ]
+                ],
+                "1": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "somalier_contam",
+                        "1.0.0"
+                    ]
+                ],
+                "2": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "python",
+                        "3.12.8"
+                    ]
+                ],
+                "vcf": [
+                    [
+                        {
+                            "id": "sites"
+                        },
+                        "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "python",
+                        "3.12.8"
+                    ]
+                ],
+                "versions_somalier_contam": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "somalier_contam",
+                        "1.0.0"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-17T19:47:09.838589",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    },
+    "synthetic - sites.vcf.gz, panel.bed - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "sites"
+                        },
+                        "sites.panel.vcf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "somalier_contam",
+                        "1.0.0"
+                    ]
+                ],
+                "2": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "python",
+                        "3.12.8"
+                    ]
+                ],
+                "vcf": [
+                    [
+                        {
+                            "id": "sites"
+                        },
+                        "sites.panel.vcf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_python": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "python",
+                        "3.12.8"
+                    ]
+                ],
+                "versions_somalier_contam": [
+                    [
+                        "SOMALIERCONTAM_RESTRICTSITES",
+                        "somalier_contam",
+                        "1.0.0"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-17T19:47:14.373148",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    }
+}

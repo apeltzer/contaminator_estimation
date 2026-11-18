@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: bam_contamination_somalier
+description: Contamination, contamination-source attribution and sample identity of BAM/CRAM files with somalier
+keywords:
+  - contamination
+  - identity
+  - relatedness
+  - somalier
+  - bam
+  - cram
+components:
+  - somalier/extract
+  - somalier/relate
+  - somalier/contamination
+  - somaliercontam/identity
+  - somaliercontam/attribute
+  - somaliercontam/report
+input:
+  - ch_bam:
+      description: "BAM/CRAM files with index; meta: id, individual, batch"
+      structure:
+        - - &id001
+            meta:
+              type: map
+              description: Groovy Map containing sample information
+          - bam:
+              type: file
+              description: BAM/CRAM
+          - bai:
+              type: file
+              description: index
+  - ch_background:
+      description: Previously extracted .somalier files used as candidate sources only
+      structure:
+        - - *id001
+          - somalier:
+              type: file
+              description: .somalier file
+  - ch_fasta:
+      description: Reference FASTA
+      structure:
+        - - *id001
+          - fasta:
+              type: file
+              description: FASTA
+  - ch_fai:
+      description: FASTA index
+      structure:
+        - - *id001
+          - fai:
+              type: file
+              description: FAI
+  - ch_sites:
+      description: Sites VCF with INFO/AF
+      structure:
+        - - *id001
+          - vcf:
+              type: file
+              description: sites VCF
+  - attribution_chunk_size:
+      type: integer
+      description: Receivers per attribution task
+  - anchored_all_pairs:
+      type: boolean
+      description: Run somalier contamination on all ordered pairs per batch
+output:
+  - extract:
+      description: Extracted allele counts
+      structure:
+        - - *id001
+          - somalier:
+              type: file
+              description: .somalier
+  - summary:
+      description: Per-sample summary
+      structure:
+        - - *id001
+          - tsv:
+              type: file
+              description: summary.samples.tsv
+  - attribution_pairs:
+      description: Receiver x candidate table
+      structure:
+        - - *id001
+          - tsv:
+              type: file
+              description: attribution.pairs.tsv.gz
+  - longitudinal:
+      description: Identity pairs
+      structure:
+        - - *id001
+          - tsv:
+              type: file
+              description: longitudinal.pairs.tsv
+  - flags:
+      description: Relatedness flags
+      structure:
+        - - *id001
+          - tsv:
+              type: file
+              description: relatedness_flags.tsv
+  - relate_html:
+      description: somalier relate HTML per batch
+      structure:
+        - - *id001
+          - html:
+              type: file
+              description: relate.html
+  - multiqc_files:
+      description: Files for MultiQC
+      structure:
+        - - file:
+              type: file
+              description: MultiQC input
+authors:
+  - "@apeltzer"
+maintainers:
+  - "@apeltzer"

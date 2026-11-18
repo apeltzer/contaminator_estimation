@@ -3,7 +3,10 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+include { MULTIQC                    } from '../modules/nf-core/multiqc/main'
+include { PREPARE_REFERENCES         } from '../subworkflows/local/prepare_references'
+include { BAM_CONTAMINATION_SOMALIER } from '../subworkflows/local/bam_contamination_somalier'
+include { BAM_SCREEN_KRAKEN2         } from '../subworkflows/local/bam_screen_kraken2'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -18,7 +21,8 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_cont
 workflow CONTAMINATIONQC {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+    ch_samplesheet // channel: [ val(meta), path(bam), path(bai) ] read in from --input
+    ch_background  // channel: [ val(meta), path(somalier) ] read in from --somalier_background
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -28,6 +32,45 @@ workflow CONTAMINATIONQC {
 
     def ch_versions = channel.empty()
     def ch_multiqc_files = channel.empty()
+
+    //
+    // SUBWORKFLOW: reference preparation (FASTA index, panel-restricted sites, Kraken2 DB)
+    //
+    PREPARE_REFERENCES (
+        params.fasta,
+        params.fasta_fai,
+        params.sites,
+        params.panel_bed,
+        params.run_kraken2 ? params.kraken2_db : null,
+        params.run_bracken ? (params.bracken_db ?: params.kraken2_db) : null
+    )
+
+    //
+    // SUBWORKFLOW: somalier relatedness, contamination, source attribution and identity
+    //
+    BAM_CONTAMINATION_SOMALIER (
+        ch_samplesheet,
+        ch_background,
+        PREPARE_REFERENCES.out.fasta,
+        PREPARE_REFERENCES.out.fai,
+        PREPARE_REFERENCES.out.sites,
+        params.attribution_chunk_size,
+        params.somalier_anchored_all_pairs
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(BAM_CONTAMINATION_SOMALIER.out.multiqc_files)
+
+    //
+    // SUBWORKFLOW: optional non-human screening with Kraken2 (+ Bracken)
+    //
+    if (params.run_kraken2) {
+        BAM_SCREEN_KRAKEN2 (
+            ch_samplesheet,
+            PREPARE_REFERENCES.out.kraken2_db,
+            PREPARE_REFERENCES.out.bracken_db,
+            params.run_bracken
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(BAM_SCREEN_KRAKEN2.out.multiqc_files)
+    }
 
     //
     // Collate and save software versions
@@ -84,8 +127,10 @@ workflow CONTAMINATIONQC {
             ]
         }
     )
-    emit:multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                 // channel: [ path(versions.yml) ]
+    emit:
+    multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
+    summary        = BAM_CONTAMINATION_SOMALIER.out.summary                       // channel: [ val(meta), path(tsv) ]
+    versions       = ch_versions                                                  // channel: [ path(versions.yml) ]
 }
 
 /*

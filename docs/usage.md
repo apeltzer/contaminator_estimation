@@ -6,58 +6,103 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+nf-core/contaminationqc takes aligned human BAM/CRAM files and answers four questions per sample:
+
+1. **Is it contaminated with human DNA, and how much?** (somalier CHARR, mixture-model fraction `alpha_unknown_source`)
+2. **Whose DNA is it?** For every receiver R and candidate C, at the sites where R is homozygous-like it compares
+   `R = (1-a)·R_self + a·C` (C's genotypes) with `R = (1-a)·R_self + a·random person` (Hardy-Weinberg on the sites' AF).
+   `LLR = max_a LL_source - max_a LL_unknown`. LLR >> 0 means C explains R's foreign alleles better than a random person.
+3. **Is it who it claims to be?** Hom-hom discordance is robust to a few % contamination, so samples of the same individual
+   are recognised even when one of them is contaminated (swaps, longitudinal samples).
+4. **Is there non-human DNA?** (optional, Kraken2 on unmapped read pairs)
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with a header row as shown in the example below.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
-
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
-```
-
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+| Column       | Description                                                                                                                                                       |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sample`     | Unique sample ID (letters, digits, `.`, `_`, `-`). Used in all outputs.                                                                                           |
+| `bam`        | BAM or CRAM file aligned to `--fasta`.                                                                                                                            |
+| `bai`        | Index (`.bai`, `.csi`, `.crai`).                                                                                                                                  |
+| `individual` | Optional patient/individual ID. Samples of the same individual are expected to be genotype-identical (`longitudinal.pairs.tsv`) and serve as each other's anchor. |
+| `batch`      | Optional batch (e.g. sequencing run). Relatedness and source attribution run within a batch; identity checks run across batches.                                  |
 
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
+sample,bam,bai,individual,batch
+PATIENT1_TUMOR,/data/PATIENT1_TUMOR.bam,/data/PATIENT1_TUMOR.bam.bai,PATIENT1,RUN01
+PATIENT1_NORMAL,/data/PATIENT1_NORMAL.bam,/data/PATIENT1_NORMAL.bam.bai,PATIENT1,RUN01
+PATIENT2_TUMOR,/data/PATIENT2_TUMOR.cram,/data/PATIENT2_TUMOR.cram.crai,PATIENT2,RUN02
 ```
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+
+To create a samplesheet from S3 prefixes or local directories, use the helper script shipped with the pipeline (needs the AWS CLI for `s3://`; each location is listed once, indexes are matched from the listing, files without index are skipped):
+
+```bash
+bin/bam_dir_to_samplesheet.py s3://bucket/runs/run42/ s3://bucket/runs/run43/ \
+    --batch-regex 'runs/([^/]+)/' \
+    --individual-regex '^(P[0-9]+)_' \
+    -o samplesheet.csv
+```
+
+`--include`/`--exclude REGEX` filter on the full path (DRAGEN/TSO500 output folders often keep the final BAMs below `Logs_Intermediates/`, so check before excluding it), `-v` logs every skipped file and the reason, `--batch-level 1` uses the BAM's parent folder as batch, `--prefix-parent` makes duplicated file names unique, `--profile`/`--region`/`--no-sign-request` are passed to the AWS CLI. See `bin/bam_dir_to_samplesheet.py --help`.
+
+The `SM` tag of the BAM read group is not used as the sample name: somalier stores `<sample>__<SM>` internally so that duplicated `SM` tags (common with vendor pipelines) cannot collide.
+
+### Background samples
+
+`--somalier_background` takes a CSV of previously extracted `.somalier` files (e.g. `somalier/extract/` of earlier runs) that act as additional candidate sources and identity references but are never reported as samples themselves:
+
+```csv title="background.csv"
+sample,somalier,individual
+RUN0815_PATIENT9,/archive/run0815/somalier/extract/RUN0815_PATIENT9.somalier,PATIENT9
+```
+
+They must have been extracted with the same sites (after panel restriction) as the current run, and their IDs and file names must not clash with the current samples.
+
+## Reference data
+
+- `--fasta` (or `--genome` with iGenomes): the reference the BAMs are aligned to; `--fasta_fai` is generated when not given.
+- `--sites`: somalier sites VCF with `INFO/AF` in the same build and contig naming. The pipeline fails early if no contig name is shared with the FASTA index.
+- `--panel_bed` / `--bed_pad`: restrict sites to (padded) panel targets. Strongly recommended for targeted panels; with fewer than ~300 remaining sites consider building a panel-specific sites file with `somalier find-sites`.
+
+## Interpreting calls
+
+| `call`                              | Meaning                                                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `clean`                             | No evidence of contamination above `--contam_threshold`.                                                    |
+| `source_identified`                 | A cohort/background sample explains the foreign alleles (`LLR >= --min_llr`, margin `>= --min_margin`).     |
+| `source_ambiguous`                  | Several individuals explain the contamination similarly well (e.g. related candidates).                     |
+| `contaminated_source_not_in_cohort` | Contamination `>= --contam_threshold` but no candidate explains it: the source was not sequenced with it.   |
+| `…;low_sites`                       | Fewer than 50 homozygous-like sites were usable; interpret with care (low coverage or too few panel sites). |
+
+Samples of the same genotype group (same individual) are never reported as each other's contamination source.
+
+## Large cohorts
+
+The pipeline was designed for thousands of samples per run:
+
+- `somalier extract` runs per sample; relatedness and source attribution run per `batch`; attribution is additionally split into chunks of `--attribution_chunk_size` receivers (default 250).
+- The anchored `somalier contamination` MLE is computed only within genotype groups by default. `--somalier_anchored_all_pairs` restores the all-vs-all behaviour of the original script (quadratic in batch size).
+- `--report_top_candidates 25` keeps `attribution.pairs.tsv.gz` small (it otherwise has N×(N-1) rows per batch).
+- Benchmark (synthetic, 3,000 samples in one batch, 1,000 sites, 4 CPUs): identity 2 s, attribution 20 s per 250-receiver chunk, `somalier relate` 10 s, report 40 s with 7.7 GB RAM. All 30 simulated contaminations (1–5 %) were attributed to the correct individual, with no false positives among 2,970 clean samples. See `tests/benchmark/simulate_cohort.py`.
+- On small panels the somalier relatedness estimate is noisy; raise `--relatedness_flag_threshold` (e.g. to 0.35) to avoid thousands of `elevated_relatedness` flags.
+
+## Kraken2 screening
+
+With `--run_kraken2 --kraken2_db <dir or .tar.gz>`, read pairs with both mates unmapped (`--kraken2_reads unmapped`, default) or all primary reads (`--kraken2_reads all`) are extracted with `samtools fastq` and classified with Kraken2; `--run_bracken` adds Bracken abundance estimates. Paired-end BAMs are expected. For CRAM input with `--kraken2_reads all`, the reference must be resolvable by samtools (e.g. `REF_PATH`/`REF_CACHE`), as `samtools fastq` is not given the FASTA.
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/contaminationqc --input ./samplesheet.csv --outdir ./results --genome GRCh37 -profile docker
+nextflow run nf-core/contaminationqc --input ./samplesheet.csv --outdir ./results --fasta genome.fa --sites sites.vcf.gz -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
