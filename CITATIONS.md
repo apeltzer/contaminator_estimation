@@ -10,6 +10,30 @@
 
 ## Pipeline tools
 
+- [somalier](https://doi.org/10.1186/s13073-020-00761-2)
+
+> Pedersen BS, Bhetariya PJ, Brown J, Kravitz SN, Marth G, Jensen RL, Bronner MP, Underhill HR, Quinlan AR. Somalier: rapid relatedness estimation for cancer and germline studies using efficient genome sketches. Genome Med. 2020 Jul 13;12(1):62. doi: 10.1186/s13073-020-00761-2.
+
+- [SAMtools](https://doi.org/10.1093/gigascience/giab008)
+
+> Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. Gigascience. 2021 Feb 16;10(2):giab008. doi: 10.1093/gigascience/giab008.
+
+- [Kraken2](https://doi.org/10.1186/s13059-019-1891-0)
+
+> Wood DE, Lu J, Langmead B. Improved metagenomic analysis with Kraken 2. Genome Biol. 2019 Nov 28;20(1):257. doi: 10.1186/s13059-019-1891-0.
+
+- [Bracken](https://doi.org/10.7717/peerj-cs.104)
+
+> Lu J, Breitwieser FP, Thielen P, Salzberg SL. Bracken: estimating species abundance in metagenomics data. PeerJ Comput Sci. 2017;3:e104. doi: 10.7717/peerj-cs.104.
+
+- [NumPy](https://doi.org/10.1038/s41586-020-2649-2)
+
+> Harris CR, Millman KJ, van der Walt SJ, et al. Array programming with NumPy. Nature. 2020 Sep;585(7825):357-362. doi: 10.1038/s41586-020-2649-2.
+
+- [pandas](https://doi.org/10.5281/zenodo.3509134)
+
+> The pandas development team. pandas-dev/pandas: Pandas. Zenodo. doi: 10.5281/zenodo.3509134.
+
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
 > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.

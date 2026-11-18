@@ -1,0 +1,272 @@
+{
+    "-profile test": {
+        "content": [
+            {
+                "KRAKEN2_KRAKEN2": {
+                    "kraken2": "2.1.6",
+                    "pigz": 2.8
+                },
+                "SAMTOOLS_FAIDX": {
+                    "samtools": 1.25
+                },
+                "SAMTOOLS_FASTQ": {
+                    "samtools": 1.25
+                },
+                "SOMALIERCONTAM_ATTRIBUTE": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIERCONTAM_IDENTITY": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIERCONTAM_REPORT": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIERCONTAM_RESTRICTSITES": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIER_CONTAMINATION": {
+                    "somalier": "0.3.6"
+                },
+                "SOMALIER_EXTRACT": {
+                    "somalier": "0.3.6"
+                },
+                "SOMALIER_RELATE": {
+                    "somalier": "0.3.6"
+                },
+                "UNTAR_KRAKEN2_DB": {
+                    "untar": 1.34
+                },
+                "Workflow": {
+                    "nf-core/contaminationqc": "v1.0.0dev"
+                }
+            },
+            [
+                "contamination",
+                "contamination/contaminationqc.attribution.pairs.tsv.gz",
+                "contamination/contaminationqc.cohort.attribution_llr.png",
+                "contamination/contaminationqc.longitudinal.pairs.tsv",
+                "contamination/contaminationqc.relatedness_flags.tsv",
+                "contamination/contaminationqc.summary.samples.tsv",
+                "contamination/identity",
+                "contamination/identity/identity.genotype_groups.tsv",
+                "contamination/identity/identity.identity_pairs.tsv",
+                "kraken2",
+                "kraken2/P1_N.kraken2.report.txt",
+                "kraken2/P1_T.kraken2.report.txt",
+                "kraken2/P2_A.kraken2.report.txt",
+                "kraken2/P3_A.kraken2.report.txt",
+                "kraken2/P4_A.kraken2.report.txt",
+                "kraken2/P6_A.kraken2.report.txt",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/kraken-top-n-plot_Class.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Domain.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Family.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Genus.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Kingdom.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Order.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Phylum.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Species.txt",
+                "multiqc/multiqc_data/kraken-top-n-plot_Unclassified.txt",
+                "multiqc/multiqc_data/llms-full.txt",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_contaminationqc_summary.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_general_stats.txt",
+                "multiqc/multiqc_data/multiqc_kraken.txt",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_somalier.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_data/somalier_het_check_plot.txt",
+                "multiqc/multiqc_data/somalier_sex_check_plot.txt",
+                "multiqc/multiqc_data/somalier_stats.txt",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml",
+                "references",
+                "references/sites.panel.vcf",
+                "somalier",
+                "somalier/contamination",
+                "somalier/contamination/geno1.contamination.pairs.tsv",
+                "somalier/contamination/geno1.contamination.samples.tsv",
+                "somalier/extract",
+                "somalier/extract/P1_N.somalier",
+                "somalier/extract/P1_T.somalier",
+                "somalier/extract/P2_A.somalier",
+                "somalier/extract/P3_A.somalier",
+                "somalier/extract/P4_A.somalier",
+                "somalier/extract/P6_A.somalier",
+                "somalier/relate",
+                "somalier/relate/cohort.relate.html",
+                "somalier/relate/cohort.relate.pairs.tsv",
+                "somalier/relate/cohort.relate.samples.tsv"
+            ],
+            [
+                "contaminationqc.attribution.pairs.tsv.gz:md5,ca9d72b302dffb7c6e89782c4485855a",
+                "contaminationqc.longitudinal.pairs.tsv:md5,49eb4cf3298df1c8d8fe701f5b286d65",
+                "contaminationqc.relatedness_flags.tsv:md5,8ffb6de2b30ea3ba0465c59f6995f814",
+                "contaminationqc.summary.samples.tsv:md5,2b4299f57ee55879ea597ef9e6060662",
+                "identity.genotype_groups.tsv:md5,e900439bcd7a39c64dde747964a13a16",
+                "identity.identity_pairs.tsv:md5,a46461ebc12cc369b4415a38d58f3f7c",
+                "P1_N.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
+                "P1_T.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
+                "P2_A.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
+                "P3_A.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
+                "P4_A.kraken2.report.txt:md5,40fe756516df87cd3c795988898ffa8a",
+                "P6_A.kraken2.report.txt:md5,af1a51fe57eb6d428350ff4a4bf759d4",
+                "kraken-top-n-plot_Class.txt:md5,f72de4adc6e6a1a947c58004c2a480f0",
+                "kraken-top-n-plot_Domain.txt:md5,912ddc38b2f23316cc8e0c498f6588b4",
+                "kraken-top-n-plot_Family.txt:md5,ceb5d35fd762e1164f1f9d66c23b53c0",
+                "kraken-top-n-plot_Genus.txt:md5,a2497dd045abe0d145f3492691fc8708",
+                "kraken-top-n-plot_Kingdom.txt:md5,0a86fcdb94a36deb559060a43f96b19b",
+                "kraken-top-n-plot_Order.txt:md5,7549be7b5365782e37ea10a2bb5498b0",
+                "kraken-top-n-plot_Phylum.txt:md5,6ff2031fe6bdf01a2d37c00ad1a50d8c",
+                "kraken-top-n-plot_Species.txt:md5,b7e9714699f7d890b70bb7d4d0facabd",
+                "kraken-top-n-plot_Unclassified.txt:md5,9711e0bddd0eac63422f2f48d121520b",
+                "multiqc_contaminationqc_summary.txt:md5,94bc866c9e76d20509acc4782cf4dfdc",
+                "multiqc_general_stats.txt:md5,8814a55a48008a7c645c2ddee1cb0980",
+                "multiqc_kraken.txt:md5,54ea941601944d0bcfd97045bcf74c79",
+                "multiqc_somalier.txt:md5,4ea43e725c758ac65c49da08f163de78",
+                "somalier_het_check_plot.txt:md5,45fc9ee1654cafb9177a3403681ac598",
+                "somalier_stats.txt:md5,926a0443eedd3bced3f04d87cadfcb42",
+                "sites.panel.vcf:md5,af7bed4e12d6a52843f9ba309cf9516b",
+                "geno1.contamination.pairs.tsv:md5,fcde57b5135d1b8db25143b2255a9def",
+                "geno1.contamination.samples.tsv:md5,ae239a6d519a11378d48d4b6848a00a0",
+                "P1_N.somalier:md5,f4f590962e1fb9dec4f6bed7be183cac",
+                "P1_T.somalier:md5,c54c5fcf323b919448119d76336d97f4",
+                "P2_A.somalier:md5,0c8315fbf0fe4ab1bab4a023c101404e",
+                "P3_A.somalier:md5,d0f9e61e671f197537b6c77cc02b4702",
+                "P4_A.somalier:md5,0fcb254496dff9731309794250523ce8",
+                "P6_A.somalier:md5,cf1c7e4593bc86281494ae2dfe109622",
+                "cohort.relate.pairs.tsv:md5,2eb0cc38520b5508bcf17dfd810d4ecf",
+                "cohort.relate.samples.tsv:md5,95c95c03f480f064a43a5e875e8702c4"
+            ]
+        ],
+        "timestamp": "2026-11-17T23:32:13.310882",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    },
+    "-profile test --somalier_background, batches, all pairs": {
+        "content": [
+            {
+                "SAMTOOLS_FAIDX": {
+                    "samtools": 1.25
+                },
+                "SOMALIERCONTAM_ATTRIBUTE": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIERCONTAM_IDENTITY": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIERCONTAM_REPORT": {
+                    "python": "3.12.8",
+                    "somalier_contam": "1.0.0"
+                },
+                "SOMALIER_CONTAMINATION": {
+                    "somalier": "0.3.6"
+                },
+                "SOMALIER_EXTRACT": {
+                    "somalier": "0.3.6"
+                },
+                "SOMALIER_RELATE": {
+                    "somalier": "0.3.6"
+                },
+                "Workflow": {
+                    "nf-core/contaminationqc": "v1.0.0dev"
+                }
+            },
+            [
+                "contamination",
+                "contamination/contaminationqc.RUN_A.attribution_llr.png",
+                "contamination/contaminationqc.RUN_B.attribution_llr.png",
+                "contamination/contaminationqc.attribution.pairs.tsv.gz",
+                "contamination/contaminationqc.longitudinal.pairs.tsv",
+                "contamination/contaminationqc.relatedness_flags.tsv",
+                "contamination/contaminationqc.summary.samples.tsv",
+                "contamination/identity",
+                "contamination/identity/identity.genotype_groups.tsv",
+                "contamination/identity/identity.identity_pairs.tsv",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/llms-full.txt",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_contaminationqc_summary.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_general_stats.txt",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_somalier.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_data/somalier_het_check_plot.txt",
+                "multiqc/multiqc_data/somalier_sex_check_plot.txt",
+                "multiqc/multiqc_data/somalier_stats.txt",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml",
+                "somalier",
+                "somalier/contamination",
+                "somalier/contamination/RUN_A.contamination.pairs.tsv",
+                "somalier/contamination/RUN_A.contamination.samples.tsv",
+                "somalier/contamination/RUN_B.contamination.pairs.tsv",
+                "somalier/contamination/RUN_B.contamination.samples.tsv",
+                "somalier/extract",
+                "somalier/extract/P1_N.somalier",
+                "somalier/extract/P1_T.somalier",
+                "somalier/extract/P2_A.somalier",
+                "somalier/extract/P3_A.somalier",
+                "somalier/extract/P4_A.somalier",
+                "somalier/extract/P6_A.somalier",
+                "somalier/relate",
+                "somalier/relate/RUN_A.relate.html",
+                "somalier/relate/RUN_A.relate.pairs.tsv",
+                "somalier/relate/RUN_A.relate.samples.tsv",
+                "somalier/relate/RUN_B.relate.html",
+                "somalier/relate/RUN_B.relate.pairs.tsv",
+                "somalier/relate/RUN_B.relate.samples.tsv"
+            ],
+            [
+                "contaminationqc.attribution.pairs.tsv.gz:md5,a677a92fb519164fc0f4d908478068bc",
+                "contaminationqc.longitudinal.pairs.tsv:md5,b57dd993b4412c0a987f50bb3dc74655",
+                "contaminationqc.relatedness_flags.tsv:md5,5d76032ddc81bd3cb082f9fa982165cf",
+                "contaminationqc.summary.samples.tsv:md5,e5e567abad3819eb63deed76b3d95e68",
+                "identity.genotype_groups.tsv:md5,9e4e68fa540260874c2ca4ab93ad7a20",
+                "identity.identity_pairs.tsv:md5,24fc017d2c5dd8ccb1b12d15c32b4b2d",
+                "multiqc_contaminationqc_summary.txt:md5,50ff2ba947d089d14df96ac21e2e3e18",
+                "multiqc_general_stats.txt:md5,ec6d61cd925081fd6b432b5431414b88",
+                "multiqc_somalier.txt:md5,f41acc1aaf32ff5e6ed35227c066c3ad",
+                "somalier_het_check_plot.txt:md5,611cee36a5f929ab42fff803d10070db",
+                "somalier_stats.txt:md5,cbdf61b38fa80d2ff282326e306c5119",
+                "RUN_A.contamination.pairs.tsv:md5,f7c3f480f737925ee4cb9defe2c61a4d",
+                "RUN_A.contamination.samples.tsv:md5,3bd40c6e1cc9e59f920e1077bb473675",
+                "RUN_B.contamination.pairs.tsv:md5,a48fa7419d1eed0bc34f086cdc9e2465",
+                "RUN_B.contamination.samples.tsv:md5,4bca46d5a107daa1a26d1958b58be03f",
+                "P1_N.somalier:md5,0b99948752e5f376248b404e2729d41e",
+                "P1_T.somalier:md5,5cfbfbd025d0c5995a3c6775fa7ede50",
+                "P2_A.somalier:md5,dccb1ee9db95a3a56846930d052c431f",
+                "P3_A.somalier:md5,3473f50f1af835a951ac4c0eeeeb98df",
+                "P4_A.somalier:md5,2b146adaf95de7e68477fff3c5e18d34",
+                "P6_A.somalier:md5,baa16c728c777089dbf7e93bc5e30df0",
+                "RUN_A.relate.pairs.tsv:md5,af0eabcb3ff0c58f3fb60fcf75d9e468",
+                "RUN_A.relate.samples.tsv:md5,64419b2bbe45adcbc238bcdfa0be541f",
+                "RUN_B.relate.pairs.tsv:md5,62ea7c3683f6ef1d83083963e2244b5f",
+                "RUN_B.relate.samples.tsv:md5,5c04918057e830003bba9cd31d6b82f4"
+            ]
+        ],
+        "timestamp": "2026-11-17T23:32:40.908251",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    }
+}

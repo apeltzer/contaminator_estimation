@@ -2,7 +2,12 @@ repository_type: pipeline
 
 nf_core_version: 4.2.2
 
-lint: {}
+lint:
+  # logos are rendered by nf-core/tools; font rendering differs between macOS and the Linux CI runners
+  files_unchanged:
+    - assets/nf-core-contaminationqc_logo_light.png
+    - docs/images/nf-core-contaminationqc_logo_light.png
+    - docs/images/nf-core-contaminationqc_logo_dark.png
 
 template:
   org: nf-core
@@ -12,7 +17,7 @@ template:
   author: Alexander Peltzer
   version: 1.0.0dev
   force: true
-  outdir: /private/tmp/claude-501/-Users-alex-repos-nf-core-contaminator-estimation/a0e19937-3a66-4d04-8073-88e27b2ce1e8/scratchpad/create/nf-core-contaminationqc
+  outdir: .
   skip_features:
     - fastqc
     - gpu

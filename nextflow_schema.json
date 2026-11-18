@@ -19,9 +19,20 @@
                     "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/contaminationqc/usage#samplesheet-input).",
+                    "description": "Path to comma-separated file containing information about the BAM/CRAM files to analyse.",
+                    "help_text": "CSV with a header and the columns `sample`, `bam`, `bai`, and optionally `individual` (patient ID; samples of the same individual are checked for identity and used as anchors) and `batch` (contamination sources are searched within a batch, e.g. a sequencing run). See the usage docs.",
                     "fa_icon": "fas fa-file-csv"
+                },
+                "somalier_background": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_background.json",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Optional CSV of previously extracted .somalier files used as additional candidate contamination sources and identity references.",
+                    "help_text": "Columns `sample`, `somalier` and optionally `individual`. Background samples are never reported as receivers. They must have been extracted with the same sites file (e.g. `somalier/extract/` from earlier runs of this pipeline).",
+                    "fa_icon": "fas fa-database"
                 },
                 "outdir": {
                     "type": "string",
@@ -61,7 +72,7 @@
                     "exists": true,
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
+                    "description": "Path to FASTA genome file the BAM/CRAM files are aligned to.",
                     "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
                     "fa_icon": "far fa-file-code"
                 },
@@ -78,6 +89,231 @@
                     "fa_icon": "fas fa-ban",
                     "hidden": true,
                     "default": "s3://ngi-igenomes/igenomes/"
+                },
+                "fasta_fai": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.fai$",
+                    "fa_icon": "far fa-file-code",
+                    "description": "Path to the FASTA index (.fai). Generated if not provided."
+                },
+                "sites": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-map-marker-alt",
+                    "description": "somalier sites VCF with INFO/AF, matching the genome build and contig naming of the BAMs.",
+                    "help_text": "Sites files for GRCh37/hg19/hg38 are distributed with somalier (https://github.com/brentp/somalier/releases). For targeted panels consider `somalier find-sites` restricted to the panel, or `--panel_bed`."
+                },
+                "panel_bed": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-bullseye",
+                    "description": "Panel target BED. If provided, sites are restricted to the (padded) targets. Recommended for targeted panels such as TSO500."
+                },
+                "bed_pad": {
+                    "type": "integer",
+                    "default": 100,
+                    "minimum": 0,
+                    "fa_icon": "fas fa-arrows-alt-h",
+                    "description": "Pad panel BED intervals by this many bp when restricting sites."
+                }
+            },
+            "required": ["sites"]
+        },
+        "genotyping_options": {
+            "title": "Genotyping and identity options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Genotype calling from somalier allele counts and hom-hom discordance identity checks.",
+            "properties": {
+                "min_depth": {
+                    "type": "integer",
+                    "default": 20,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-layer-group",
+                    "description": "Minimum depth for a site to be used (somalier recommends >= 20 for cancer samples)."
+                },
+                "hom_max_af": {
+                    "type": "number",
+                    "default": 0.15,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "fa_icon": "fas fa-percentage",
+                    "description": "Minor-allele fraction tolerated for homozygous-like calls."
+                },
+                "het_min_af": {
+                    "type": "number",
+                    "default": 0.25,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "fa_icon": "fas fa-percentage",
+                    "description": "Heterozygous call window [x, 1-x] for candidate genotypes."
+                },
+                "identity_max_disc": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "fa_icon": "fas fa-user-check",
+                    "description": "Hom-hom discordance at or below which two samples are considered the same individual."
+                },
+                "min_identity_sites": {
+                    "type": "integer",
+                    "default": 20,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-hashtag",
+                    "description": "Minimum number of shared homozygous sites required for identity calls."
+                }
+            }
+        },
+        "attribution_options": {
+            "title": "Contamination source attribution options",
+            "type": "object",
+            "fa_icon": "fas fa-search",
+            "description": "Mixture model comparing 'candidate sample is the contaminant' against 'an unknown person is the contaminant'.",
+            "properties": {
+                "error_rate": {
+                    "type": "number",
+                    "default": 0.002,
+                    "minimum": 0,
+                    "maximum": 0.1,
+                    "fa_icon": "fas fa-exclamation",
+                    "description": "Per-read error rate used in the mixture likelihood."
+                },
+                "max_eff_depth": {
+                    "type": "number",
+                    "default": 300,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-compress-alt",
+                    "description": "Cap on the effective depth per site (guards against over-confidence from overdispersion at very high depth)."
+                },
+                "contam_threshold": {
+                    "type": "number",
+                    "default": 0.01,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "fa_icon": "fas fa-flag",
+                    "description": "Flag samples with estimated contamination at or above this fraction."
+                },
+                "min_llr": {
+                    "type": "number",
+                    "default": 10,
+                    "fa_icon": "fas fa-balance-scale",
+                    "description": "Log-likelihood ratio (nat) versus an unknown contaminant required to call a source."
+                },
+                "min_margin": {
+                    "type": "number",
+                    "default": 5,
+                    "fa_icon": "fas fa-balance-scale-right",
+                    "description": "LLR margin between the best and second-best individual required for an unambiguous source call."
+                },
+                "relatedness_flag_threshold": {
+                    "type": "number",
+                    "default": 0.2,
+                    "minimum": -1,
+                    "maximum": 1,
+                    "fa_icon": "fas fa-users",
+                    "description": "Flag sample pairs from different individuals with somalier relatedness above this value (possible contamination or family members).",
+                    "help_text": "The relatedness estimate is noisy on small panels (SD ~0.07 with 1,000 sites), so the default of 0.2 flags ~2 % of unrelated pairs in large cohorts. Raise it (e.g. 0.35) for thousands of samples on a targeted panel."
+                }
+            }
+        },
+        "scaling_options": {
+            "title": "Scaling options",
+            "type": "object",
+            "fa_icon": "fas fa-expand-arrows-alt",
+            "description": "Options controlling parallelisation and output size for large cohorts.",
+            "properties": {
+                "attribution_chunk_size": {
+                    "type": "integer",
+                    "default": 250,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-th",
+                    "description": "Number of receiver samples per source-attribution task."
+                },
+                "somalier_anchored_all_pairs": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-project-diagram",
+                    "description": "Run `somalier contamination` on all ordered sample pairs per batch instead of only within genotype groups (quadratic cost).",
+                    "help_text": "By default the anchored (conpair-like) contamination MLE is only computed between samples of the same individual (genotype group), which is all the per-sample summary uses. Enable to populate `somalier_anchored_mle` for every pair in `attribution.pairs.tsv.gz`, as the original script did."
+                },
+                "report_top_candidates": {
+                    "type": "integer",
+                    "default": 0,
+                    "minimum": 0,
+                    "fa_icon": "fas fa-sort-amount-down",
+                    "description": "Keep only the N best candidate sources per receiver in `attribution.pairs.tsv.gz` (0 = all). Recommended for large cohorts, e.g. 25."
+                },
+                "max_heatmap_samples": {
+                    "type": "integer",
+                    "default": 200,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-image",
+                    "description": "Skip the attribution LLR heatmap for batches with more samples than this."
+                }
+            }
+        },
+        "kraken2_options": {
+            "title": "Kraken2 / Bracken options",
+            "type": "object",
+            "fa_icon": "fas fa-bacteria",
+            "description": "Optional screening for non-human contamination.",
+            "properties": {
+                "run_kraken2": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-toggle-on",
+                    "description": "Classify reads with Kraken2 to detect non-human contamination."
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "format": "path",
+                    "exists": true,
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to a Kraken2 database directory or .tar.gz archive.",
+                    "help_text": "For thousands of samples use a capped database (e.g. Standard-16 or PlusPF-16) and consider `--kraken2_memory_mapping` with the database on shared storage."
+                },
+                "kraken2_reads": {
+                    "type": "string",
+                    "default": "unmapped",
+                    "enum": ["unmapped", "all"],
+                    "fa_icon": "fas fa-filter",
+                    "description": "Classify only read pairs with both mates unmapped (`unmapped`) or all primary reads (`all`)."
+                },
+                "kraken2_memory_mapping": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-memory",
+                    "description": "Pass `--memory-mapping` to Kraken2 (avoids loading the database into RAM)."
+                },
+                "run_bracken": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-toggle-on",
+                    "description": "Re-estimate abundances with Bracken (requires a Bracken-enabled database)."
+                },
+                "bracken_db": {
+                    "type": "string",
+                    "format": "path",
+                    "exists": true,
+                    "fa_icon": "fas fa-database",
+                    "description": "Bracken-enabled database (directory or .tar.gz). Defaults to `--kraken2_db`."
+                },
+                "bracken_level": {
+                    "type": "string",
+                    "default": "S",
+                    "enum": ["D", "P", "C", "O", "F", "G", "S"],
+                    "fa_icon": "fas fa-sitemap",
+                    "description": "Taxonomic level for Bracken."
+                },
+                "bracken_read_length": {
+                    "type": "integer",
+                    "default": 100,
+                    "minimum": 1,
+                    "fa_icon": "fas fa-ruler-horizontal",
+                    "description": "Read length for Bracken (must exist in the database's kmer distributions)."
                 }
             }
         },
@@ -238,6 +474,18 @@
         },
         {
             "$ref": "#/$defs/reference_genome_options"
+        },
+        {
+            "$ref": "#/$defs/genotyping_options"
+        },
+        {
+            "$ref": "#/$defs/attribution_options"
+        },
+        {
+            "$ref": "#/$defs/scaling_options"
+        },
+        {
+            "$ref": "#/$defs/kraken2_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

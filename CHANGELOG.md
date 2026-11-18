@@ -9,6 +9,12 @@ Initial release of nf-core/contaminationqc, created with the [nf-core](https://n
 
 ### `Added`
 
+- Port of the standalone `somalier_contam.py` (relatedness, contamination, contamination-source attribution, identity) to a modular Nextflow pipeline; the original is kept in `tests/baseline/` and results are verified to be equivalent on the test data.
+- Per-sample `somalier extract`, per-batch `somalier relate`, global identity, per-group/per-batch `somalier contamination`, sharded source attribution and a global report.
+- `batch` samplesheet column and `--somalier_background` for scaling to thousands of samples and identifying contaminants from earlier runs.
+- Optional Kraken2 (+ Bracken) screening of unmapped read pairs.
+- Local modules `somalier/contamination`, `somaliercontam/{restrictsites,identity,attribute,report}`; patched nf-core `somalier/relate` (sites input) and `somalier/extract` (output named by prefix).
+
 ### `Fixed`
 
 ### `Dependencies`

@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: bam_screen_kraken2
+description: Screen BAM/CRAM files for non-human contamination with Kraken2 (and optionally Bracken)
+keywords:
+  - kraken2
+  - bracken
+  - metagenomics
+  - contamination
+  - bam
+components:
+  - samtools/fastq
+  - kraken2/kraken2
+  - bracken/bracken
+input:
+  - ch_bam:
+      description: BAM/CRAM files with index
+      structure:
+        - - &id001
+            meta:
+              type: map
+              description: Groovy Map containing sample information
+          - bam:
+              type: file
+              description: BAM/CRAM
+          - bai:
+              type: file
+              description: index
+  - ch_kraken2_db:
+      description: Kraken2 database
+      structure:
+        - - db:
+              type: directory
+              description: database directory
+  - ch_bracken_db:
+      description: Bracken database
+      structure:
+        - - db:
+              type: directory
+              description: database directory
+  - run_bracken:
+      type: boolean
+      description: Run Bracken
+output:
+  - kraken2_report:
+      description: Kraken2 reports
+      structure:
+        - - *id001
+          - report:
+              type: file
+              description: kraken2 report
+  - bracken_report:
+      description: Bracken reports
+      structure:
+        - - *id001
+          - tsv:
+              type: file
+              description: bracken tsv
+  - multiqc_files:
+      description: Files for MultiQC
+      structure:
+        - - file:
+              type: file
+              description: MultiQC input
+authors:
+  - "@apeltzer"
+maintainers:
+  - "@apeltzer"

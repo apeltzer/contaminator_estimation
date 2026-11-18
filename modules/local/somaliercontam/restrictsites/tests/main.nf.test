@@ -1,0 +1,52 @@
+nextflow_process {
+
+    name "Test Process SOMALIERCONTAM_RESTRICTSITES"
+    script "../main.nf"
+    process "SOMALIERCONTAM_RESTRICTSITES"
+
+    tag "modules"
+    tag "modules_local"
+    tag "somaliercontam"
+    tag "somaliercontam/restrictsites"
+
+    test("synthetic - sites.vcf.gz, panel.bed") {
+
+        when {
+            process {
+                """
+                input[0] = [ [ id:'sites' ], file("${projectDir}/tests/data/sites.vcf.gz", checkIfExists: true) ]
+                input[1] = [ [ id:'panel' ], file("${projectDir}/tests/data/panel.bed", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() },
+                { assert path(process.out.vcf[0][1]).readLines().findAll { !it.startsWith('#') }.size() == 320 }
+            )
+        }
+    }
+
+    test("synthetic - sites.vcf.gz, panel.bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [ [ id:'sites' ], file("${projectDir}/tests/data/sites.vcf.gz", checkIfExists: true) ]
+                input[1] = [ [ id:'panel' ], file("${projectDir}/tests/data/panel.bed", checkIfExists: true) ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(process.out).match() }
+            )
+        }
+    }
+}

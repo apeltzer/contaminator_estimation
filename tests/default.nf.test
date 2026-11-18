@@ -7,24 +7,74 @@ nextflow_pipeline {
     test("-profile test") {
 
         when {
+            // test samplesheets use repository-relative paths; make them absolute for the nf-test launch dir
+            def samplesheet = new File("${outputDir}/../samplesheet.csv")
+            samplesheet.parentFile.mkdirs()
+            samplesheet.text = new File("${projectDir}/tests/data/samplesheet.csv").text.replaceAll(/tests\/data\//, "${projectDir}/tests/data/")
             params {
                 outdir = "$outputDir"
+                input  = "$outputDir/../samplesheet.csv"
             }
         }
 
         then {
             // stable_path: All files + folders in ${params.outdir}/ with a stable path (including file name)
-            def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            def stable_path = getAllFilesFromDir("${outputDir}".toString(), relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}', 'multiqc/multiqc_plots', 'multiqc/multiqc_plots/**']).collect { p -> p.toString() }.findAll { p -> p }
             // stable_content: All files in ${params.outdir}/ with stable content
-            def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
+            def stable_content = getAllFilesFromDir("${outputDir}".toString(), ignoreFile: 'tests/.nftignore')
+            def summary = new File("${outputDir}/contamination/contaminationqc.summary.samples.tsv").readLines()
             assert workflow.success
             assertAll(
+                // known truth of the synthetic data
+                { assert summary.find { it.startsWith('P3_A\t') }.contains('source_identified') },
+                { assert summary.find { it.startsWith('P3_A\t') }.contains('\tP2_A\t') },
+                { assert summary.find { it.startsWith('P4_A\t') }.contains('contaminated_source_not_in_cohort') },
+                { assert summary.findAll { it.contains('\tclean\t') }.size() == 4 },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml"),
                     // All stable path name, with a relative path
                     stable_path,
                     // All files with stable contents
+                    stable_content
+                ).match() }
+            )
+        }
+    }
+
+    test("-profile test --somalier_background, batches, all pairs") {
+
+        when {
+            def samplesheet = new File("${outputDir}/../samplesheet.csv")
+            samplesheet.parentFile.mkdirs()
+            samplesheet.text = new File("${projectDir}/tests/data/samplesheet_batches.csv").text.replaceAll(/tests\/data\//, "${projectDir}/tests/data/")
+            new File("${outputDir}/../background.csv").text = new File("${projectDir}/tests/data/background.csv").text.replaceAll(/tests\/data\//, "${projectDir}/tests/data/")
+            params {
+                outdir                      = "$outputDir"
+                input                       = "$outputDir/../samplesheet.csv"
+                somalier_background         = "$outputDir/../background.csv"
+                panel_bed                   = null
+                run_kraken2                 = false
+                somalier_anchored_all_pairs = true
+                attribution_chunk_size      = 2
+            }
+        }
+
+        then {
+            def stable_path = getAllFilesFromDir("${outputDir}".toString(), relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}', 'multiqc/multiqc_plots', 'multiqc/multiqc_plots/**']).collect { p -> p.toString() }.findAll { p -> p }
+            def stable_content = getAllFilesFromDir("${outputDir}".toString(), ignoreFile: 'tests/.nftignore')
+            def summary = new File("${outputDir}/contamination/contaminationqc.summary.samples.tsv").readLines()
+            def longitudinal = new File("${outputDir}/contamination/contaminationqc.longitudinal.pairs.tsv").readLines()
+            assert workflow.success
+            assertAll(
+                // P4_A's contaminant (P5) is only present as background sample P5_X
+                { assert summary.find { it.startsWith('P4_A\t') }.contains('source_identified') },
+                { assert summary.find { it.startsWith('P4_A\t') }.contains('\tP5_X\t') },
+                // same individual across batches is still recognised
+                { assert longitudinal.find { it.startsWith('P1_N\tP1_T\t') }.contains('\tok\t') },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_contaminationqc_software_mqc_versions.yml"),
+                    stable_path,
                     stable_content
                 ).match() }
             )

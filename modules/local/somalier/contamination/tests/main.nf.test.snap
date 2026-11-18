@@ -1,0 +1,116 @@
+{
+    "homo_sapiens synthetic - somalier x6, sites": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.samples.tsv:md5,6ae6b3ac9cb14940b0557f78497c7957"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.pairs.tsv:md5,9e65c7d933995b3137b5b98df10bba77"
+                    ]
+                ],
+                "2": [
+                    [
+                        "SOMALIER_CONTAMINATION",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ],
+                "pairs_tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.pairs.tsv:md5,9e65c7d933995b3137b5b98df10bba77"
+                    ]
+                ],
+                "samples_tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.samples.tsv:md5,6ae6b3ac9cb14940b0557f78497c7957"
+                    ]
+                ],
+                "versions_somalier": [
+                    [
+                        "SOMALIER_CONTAMINATION",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-17T19:46:20.130362",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    },
+    "homo_sapiens synthetic - somalier x6, sites - stub": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.samples.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "1": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.pairs.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "2": [
+                    [
+                        "SOMALIER_CONTAMINATION",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ],
+                "pairs_tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.pairs.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "samples_tsv": [
+                    [
+                        {
+                            "id": "test"
+                        },
+                        "test.contamination.samples.tsv:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_somalier": [
+                    [
+                        "SOMALIER_CONTAMINATION",
+                        "somalier",
+                        "0.3.6"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-17T19:46:23.894013",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.10.6"
+        }
+    }
+}

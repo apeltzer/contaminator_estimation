@@ -1,0 +1,50 @@
+name: Run nf-test (GitHub-hosted runners)
+# The template's nf-test.yml uses the nf-core organisation's self-hosted runners, which do not exist
+# outside nf-core. This workflow runs the same tests on GitHub-hosted runners for repositories
+# outside the nf-core organisation (personal repos / forks) and is skipped inside nf-core.
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/meta.yml"
+      - "**/*.md"
+      - "**/*.png"
+      - "**/*.svg"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NFT_VER: "0.9.4"
+  NXF_ANSI_LOG: false
+
+jobs:
+  nf-test:
+    name: "docker | ${{ matrix.NXF_VER }}"
+    if: github.repository_owner != 'nf-core'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        NXF_VER:
+          - "25.10.4"
+          - "latest-everything"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Nextflow
+        uses: nf-core/setup-nextflow@v3
+        with:
+          version: "${{ matrix.NXF_VER }}"
+
+      - name: Install nf-test
+        uses: nf-core/setup-nf-test@v2
+        with:
+          version: "${{ env.NFT_VER }}"
+          install-pdiff: true
+
+      - name: Run nf-test
+        continue-on-error: ${{ matrix.NXF_VER == 'latest-everything' }}
+        run: nf-test test --profile=+docker --ci --verbose
